@@ -13,7 +13,22 @@ import jwt
 import os
 import shutil
 import uuid
+import random
+import smtplib
+import csv
+import io
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
+
+# ── Load .env ────────────────────────────────────────────────────────────────
+load_dotenv()
+SMTP_EMAIL    = os.getenv("Email", "")
+SMTP_APP_PASS = os.getenv("app_password", "")
+
+# ── In-memory OTP store  {email: {otp, expires_at}} ──────────────────────────
+password_reset_otps: dict = {}
 
 app = FastAPI(title="EduCoreHub API")
 
@@ -75,6 +90,10 @@ async def serve_faculty_dashboard(request: Request):
 @app.get("/admin/dashboard", response_class=HTMLResponse)
 async def serve_admin_dashboard(request: Request):
     return templates.TemplateResponse("admin_dashboard.html", {"request": request})
+
+@app.get("/forgot-password", response_class=HTMLResponse)
+async def serve_forgot_password(request: Request):
+    return templates.TemplateResponse("forgot_password.html", {"request": request})
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1160,6 +1179,227 @@ def admin_delete_resource(resource_id: int, request: Request):
         return {"message": "Resource deleted successfully."}
     except HTTPException:
         raise
+    except Error as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.post("/api/admin/bulk-upload")
+async def admin_bulk_upload(request: Request, file: UploadFile = File(...)):
+    """Bulk-create student users from a CSV file."""
+    get_current_user(request)
+
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are supported.")
+
+    contents = await file.read()
+    try:
+        text = contents.decode('utf-8')
+    except UnicodeDecodeError:
+        text = contents.decode('latin-1')
+
+    reader = csv.DictReader(io.StringIO(text))
+    required = {'full_name', 'email', 'usn', 'semester_number', 'password'}
+    if not required.issubset(set(reader.fieldnames or [])):
+        raise HTTPException(
+            status_code=400,
+            detail=f"CSV must have columns: {', '.join(sorted(required))}. Got: {', '.join(reader.fieldnames or [])}"
+        )
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    results = []
+    success_count = 0
+    error_count = 0
+
+    try:
+        for i, row in enumerate(reader, start=2):  # row 1 is header
+            name  = (row.get('full_name') or '').strip()
+            email = (row.get('email') or '').strip()
+            usn   = (row.get('usn') or '').strip()
+            sem   = (row.get('semester_number') or '').strip()
+            pwd   = (row.get('password') or '').strip()
+            phone = (row.get('phone') or '').strip()
+
+            if not all([name, email, usn, sem, pwd]):
+                results.append({"row": i, "email": email or '(empty)', "status": "error", "detail": "Missing required fields"})
+                error_count += 1
+                continue
+
+            try:
+                sem_num = int(sem)
+            except ValueError:
+                results.append({"row": i, "email": email, "status": "error", "detail": "Invalid semester number"})
+                error_count += 1
+                continue
+
+            # Check duplicates
+            cursor.execute("SELECT user_id FROM users WHERE email = %s", (email,))
+            if cursor.fetchone():
+                results.append({"row": i, "email": email, "status": "error", "detail": "Email already registered"})
+                error_count += 1
+                continue
+
+            cursor.execute("SELECT user_id FROM students WHERE usn = %s", (usn,))
+            if cursor.fetchone():
+                results.append({"row": i, "email": email, "status": "error", "detail": f"USN {usn} already registered"})
+                error_count += 1
+                continue
+
+            # Get or create semester
+            cursor.execute("SELECT semester_id FROM semesters WHERE semester_number = %s", (sem_num,))
+            sem_row = cursor.fetchone()
+            if sem_row:
+                semester_id = sem_row['semester_id']
+            else:
+                cursor.execute("INSERT INTO semesters (semester_number) VALUES (%s)", (sem_num,))
+                semester_id = cursor.lastrowid
+
+            # Create user
+            hashed = hash_password(pwd)
+            cursor.execute(
+                "INSERT INTO users (full_name, email, password_hash, role) VALUES (%s, %s, %s, 'STUDENT')",
+                (name, email, hashed)
+            )
+            user_id = cursor.lastrowid
+
+            # Create student entry
+            cursor.execute(
+                "INSERT INTO students (user_id, usn, semester_id) VALUES (%s, %s, %s)",
+                (user_id, usn, semester_id)
+            )
+
+            results.append({"row": i, "email": email, "status": "success", "detail": f"Created as STUDENT (Sem {sem_num})"})
+            success_count += 1
+
+        conn.commit()
+        return {
+            "message": f"{success_count} users created, {error_count} errors.",
+            "success": success_count,
+            "errors": error_count,
+            "details": results
+        }
+    except Error as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.get("/api/admin/bulk-template")
+async def download_bulk_template():
+    """Serve the CSV template for bulk upload."""
+    template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "students_template.csv")
+    if not os.path.exists(template_path):
+        raise HTTPException(status_code=404, detail="Template file not found.")
+    return FileResponse(template_path, filename="students_template.csv", media_type="text/csv")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  FORGOT / RESET PASSWORD
+# ══════════════════════════════════════════════════════════════════════════════
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    otp: str
+    new_password: str
+
+
+def _send_otp_email(to_email: str, otp: str, user_name: str):
+    """Send a password-reset OTP via Gmail SMTP."""
+    if not SMTP_EMAIL or not SMTP_APP_PASS:
+        raise HTTPException(status_code=500, detail="Email service not configured.")
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "EduCoreHub – Password Reset OTP"
+    msg["From"]    = f"EduCoreHub <{SMTP_EMAIL}>"
+    msg["To"]      = to_email
+
+    html = f"""\
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#0d0f18;color:#e8eaf6;border-radius:16px;border:1px solid rgba(108,99,255,.25)">
+      <h2 style="margin:0 0 8px;color:#9d97ff">Password Reset</h2>
+      <p style="margin:0 0 24px;color:#8b90b5;font-size:14px">Hi {user_name}, use the OTP below to reset your password. It expires in <b>10 minutes</b>.</p>
+      <div style="text-align:center;padding:20px;background:#13172a;border-radius:12px;border:1px solid rgba(108,99,255,.2);letter-spacing:8px;font-size:32px;font-weight:700;color:#6c63ff">{otp}</div>
+      <p style="margin:24px 0 0;color:#8b90b5;font-size:12px">If you did not request this, please ignore this email.</p>
+    </div>
+    """
+    msg.attach(MIMEText(html, "html"))
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(SMTP_EMAIL, SMTP_APP_PASS)
+            server.sendmail(SMTP_EMAIL, to_email, msg.as_string())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+
+@app.post("/api/forgot-password")
+def forgot_password(body: ForgotPasswordRequest):
+    """Generate a 6-digit OTP and email it to the user."""
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT user_id, full_name, role FROM users WHERE email = %s", (body.email,))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="No account found with this email.")
+
+        if user["role"] == "ADMIN":
+            raise HTTPException(status_code=403, detail="Admin password reset is not allowed via email. Contact the system administrator.")
+
+        otp = str(random.randint(100000, 999999))
+        password_reset_otps[body.email] = {
+            "otp": otp,
+            "expires_at": datetime.now(timezone.utc) + timedelta(minutes=10),
+        }
+
+        _send_otp_email(body.email, otp, user["full_name"])
+        return {"message": "OTP sent to your email address."}
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.post("/api/reset-password")
+def reset_password(body: ResetPasswordRequest):
+    """Verify OTP and update the user's password."""
+    stored = password_reset_otps.get(body.email)
+    if not stored:
+        raise HTTPException(status_code=400, detail="No OTP requested for this email. Please request a new one.")
+
+    if datetime.now(timezone.utc) > stored["expires_at"]:
+        password_reset_otps.pop(body.email, None)
+        raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
+
+    if stored["otp"] != body.otp:
+        raise HTTPException(status_code=400, detail="Invalid OTP. Please try again.")
+
+    # OTP valid – update password
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor()
+    try:
+        hashed = hash_password(body.new_password)
+        cursor.execute("UPDATE users SET password_hash = %s WHERE email = %s", (hashed, body.email))
+        conn.commit()
+        password_reset_otps.pop(body.email, None)
+        return {"message": "Password reset successfully. You can now log in with your new password."}
     except Error as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

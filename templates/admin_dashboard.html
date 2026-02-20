@@ -2084,18 +2084,21 @@
           <div class="instruction-panel">
             <h3><i class="fas fa-info-circle"></i> File Format Guide</h3>
             <ol>
-              <li>Download the template: <code>users_template.csv</code></li>
-              <li>Fill columns: <code>Name</code>, <code>Email</code>, <code>Role</code>, <code>USN</code>,
-                <code>Department</code>
+              <li>Download the template: <code>students_template.csv</code></li>
+              <li>Fill columns: <code>full_name</code>, <code>email</code>, <code>usn</code>,
+                <code>semester_number</code>,
+                <code>password</code>, <code>phone</code> (optional)
               </li>
-              <li>Save as <code>.csv</code> or <code>.xlsx</code> format</li>
+              <li>Save as <code>.csv</code> format (UTF-8)</li>
               <li>Upload the file using drag & drop or browse</li>
-              <li>Review entries in the preview before confirming</li>
+              <li>Review the results after upload completes</li>
             </ol>
             <div style="margin-top:16px;">
-              <button class="btn btn-secondary btn-sm" style="width:100%;justify-content:center;">
-                <i class="fas fa-download"></i> Download Template
-              </button>
+              <a href="/api/admin/bulk-template" download style="text-decoration:none;">
+                <button class="btn btn-secondary btn-sm" style="width:100%;justify-content:center;">
+                  <i class="fas fa-download"></i> Download Template
+                </button>
+              </a>
             </div>
           </div>
 
@@ -2681,6 +2684,102 @@
     document.getElementById('scheduleNotice').addEventListener('change', function () {
       document.getElementById('scheduleDate').style.display = this.checked ? 'block' : 'none';
     });
+
+    // ===== BULK UPLOAD =====
+    function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+    function handleDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+    function handleDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      const files = e.dataTransfer.files;
+      if (files.length) uploadCSV(files[0]);
+    }
+    function handleFileSelect(e) {
+      const files = e.target.files;
+      if (files.length) uploadCSV(files[0]);
+      e.target.value = '';
+    }
+
+    async function uploadCSV(file) {
+      if (!file.name.endsWith('.csv')) {
+        showBulkAlert('error', 'Only .csv files are supported.');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        showBulkAlert('error', 'File exceeds 10MB limit.');
+        return;
+      }
+
+      // Show progress
+      const progEl = document.getElementById('uploadProgress');
+      const barEl = document.getElementById('progressBar');
+      const nameEl = document.getElementById('uploadFileName');
+      const pctEl = document.getElementById('uploadPercent');
+      progEl.style.display = 'block';
+      nameEl.textContent = file.name;
+      barEl.style.width = '0%';
+      pctEl.textContent = '0%';
+      document.getElementById('uploadAlert').style.display = 'none';
+      document.getElementById('uploadList').innerHTML = '';
+
+      // Simulate progress while uploading
+      let pct = 0;
+      const interval = setInterval(() => {
+        pct = Math.min(pct + Math.random() * 15, 90);
+        barEl.style.width = pct + '%';
+        pctEl.textContent = Math.round(pct) + '%';
+      }, 300);
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/admin/bulk-upload', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('edu_token') },
+          body: formData
+        });
+        clearInterval(interval);
+        barEl.style.width = '100%';
+        pctEl.textContent = '100%';
+
+        const data = await res.json();
+        if (res.ok) {
+          showBulkAlert('success', `✅ ${data.success} users created, ${data.errors} errors.`);
+          renderBulkResults(data.details || []);
+          loadStats();
+          loadUsers();
+        } else {
+          showBulkAlert('error', '⚠ ' + (data.detail || 'Upload failed.'));
+        }
+      } catch {
+        clearInterval(interval);
+        showBulkAlert('error', '⚠ Cannot connect to server.');
+      }
+    }
+
+    function showBulkAlert(type, msg) {
+      const el = document.getElementById('uploadAlert');
+      el.style.display = 'block';
+      el.className = 'alert ' + (type === 'success' ? 'success' : 'error');
+      el.innerHTML = msg;
+    }
+
+    function renderBulkResults(details) {
+      const list = document.getElementById('uploadList');
+      list.innerHTML = details.map(d => `
+        <div class="upload-item">
+          <div class="upload-item-icon">
+            <i class="fas ${d.status === 'success' ? 'fa-check-circle' : 'fa-times-circle'}" 
+               style="color:${d.status === 'success' ? 'var(--success)' : 'var(--danger)'}"></i>
+          </div>
+          <div class="upload-item-info">
+            <div class="upload-item-name">Row ${d.row} — ${d.email}</div>
+            <div class="upload-item-meta">${d.detail}</div>
+          </div>
+        </div>
+      `).join('');
+    }
 
     // ===== INIT =====
     async function init() {
