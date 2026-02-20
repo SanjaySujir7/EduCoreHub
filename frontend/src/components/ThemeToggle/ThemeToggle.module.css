@@ -1,0 +1,23 @@
+.toggle {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 1500;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  color: var(--accent-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--accent-glow);
+  transition: all 0.3s ease;
+}
+
+.toggle:hover {
+  border-color: var(--accent-primary);
+}
