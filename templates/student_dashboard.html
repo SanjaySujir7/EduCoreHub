@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard | EduCoreHub</title>
     <link
-        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
         rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -113,7 +113,7 @@
         }
 
         .logo-text {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit', sans-serif;
             font-weight: 800;
             font-size: 18px;
             letter-spacing: -.5px;
@@ -298,7 +298,7 @@
         }
 
         .topbar-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit', sans-serif;
             font-weight: 700;
             font-size: 18px;
             flex: 1
@@ -463,7 +463,7 @@
         }
 
         .page-header h1 {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit', sans-serif;
             font-weight: 800;
             font-size: 28px;
             letter-spacing: -.5px
@@ -559,7 +559,7 @@
         }
 
         .stat-value {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit', sans-serif;
             font-size: 36px;
             font-weight: 800;
             line-height: 1;
@@ -618,7 +618,7 @@
         }
 
         .card-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit', sans-serif;
             font-weight: 700;
             font-size: 16px
         }
@@ -982,7 +982,7 @@
         }
 
         .drop-title {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit', sans-serif;
             font-size: 18px;
             font-weight: 700;
             margin-bottom: 8px
@@ -1127,7 +1127,7 @@
         }
 
         .profile-name {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Outfit', sans-serif;
             font-size: 22px;
             font-weight: 800;
             margin-bottom: 4px
@@ -1373,7 +1373,7 @@
         <!-- DASHBOARD PAGE -->
         <div class="page active" id="page-dashboard">
             <div class="page-header">
-                <h1 id="welcomeMsg">Welcome back! 👋</h1>
+                <h1 id="welcomeMsg">Dashboard</h1>
                 <p>Here's your academic resource hub overview.</p>
             </div>
             <div class="stat-grid">
@@ -1625,7 +1625,7 @@
         const initials = userData.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
         document.getElementById('userAvatar').textContent = initials;
         document.getElementById('userName').textContent = userData.name;
-        document.getElementById('welcomeMsg').textContent = `Welcome back, ${userData.name.split(' ')[0]}! 👋`;
+        document.getElementById('welcomeMsg').textContent = `Hey, ${userData.name.split(' ')[0]}!`;
         document.getElementById('profileAvatar').textContent = initials;
         document.getElementById('profileName').textContent = userData.name;
         document.getElementById('profileFullName').textContent = userData.name;
@@ -1727,7 +1727,7 @@
 
             document.getElementById('userAvatar').textContent = ini;
             document.getElementById('userName').textContent = n;
-            document.getElementById('welcomeMsg').textContent = `Welcome back, ${n.split(' ')[0]}! 👋`;
+            document.getElementById('welcomeMsg').textContent = `Hey, ${n.split(' ')[0]}!`;
             document.getElementById('profileAvatar').textContent = ini;
             document.getElementById('profileName').textContent = n;
             document.getElementById('profileFullName').textContent = n;

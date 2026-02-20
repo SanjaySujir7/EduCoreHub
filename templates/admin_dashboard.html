@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | EduCoreHub</title>
   <link
-    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
     rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <style>
@@ -114,7 +114,7 @@
     }
 
     .logo-text {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-weight: 800;
       font-size: 18px;
       letter-spacing: -0.5px;
@@ -304,7 +304,7 @@
     }
 
     .topbar-title {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-weight: 700;
       font-size: 18px;
       flex: 1;
@@ -471,7 +471,7 @@
     }
 
     .page-header h1 {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-weight: 800;
       font-size: 28px;
       letter-spacing: -0.5px;
@@ -577,7 +577,7 @@
     }
 
     .stat-value {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: 36px;
       font-weight: 800;
       line-height: 1;
@@ -640,7 +640,7 @@
     }
 
     .card-title {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-weight: 700;
       font-size: 16px;
     }
@@ -1274,7 +1274,7 @@
     }
 
     .drop-title {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: 18px;
       font-weight: 700;
       margin-bottom: 8px;
@@ -1548,7 +1548,7 @@
     }
 
     .instruction-panel h3 {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: 14px;
       margin-bottom: 12px;
       display: flex;
@@ -1703,7 +1703,7 @@
     }
 
     .section-divider span {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: 13px;
       font-weight: 700;
       color: var(--text2);
@@ -1753,7 +1753,7 @@
     }
 
     .modal-title {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-weight: 700;
       font-size: 18px;
     }
@@ -1893,7 +1893,7 @@
     <!-- ===== DASHBOARD PAGE ===== -->
     <div class="page active" id="page-dashboard">
       <div class="page-header">
-        <h1 id="welcomeMsg">Welcome back, Admin 👋</h1>
+        <h1 id="welcomeMsg">Dashboard</h1>
         <p>Here's what's happening across your college today.</p>
       </div>
 
@@ -1905,10 +1905,10 @@
           <div class="stat-change up"><i class="fas fa-arrow-up"></i> +124 this semester</div>
         </div>
         <div class="stat-card purple">
-          <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+          <div class="stat-icon"><i class="fas fa-users"></i></div>
           <div class="stat-value" id="statFaculty">0</div>
-          <div class="stat-label">Total Faculty</div>
-          <div class="stat-change up"><i class="fas fa-arrow-up"></i> Faculty members</div>
+          <div class="stat-label">Total Users</div>
+          <div class="stat-change up"><i class="fas fa-arrow-up"></i> All registered users</div>
         </div>
         <div class="stat-card teal">
           <div class="stat-icon"><i class="fas fa-book-open"></i></div>
@@ -2404,7 +2404,7 @@
     const ini = userData.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
     document.getElementById('adminAvatar').textContent = ini;
     document.getElementById('adminName').textContent = userData.name;
-    document.getElementById('welcomeMsg').textContent = `Welcome back, ${userData.name.split(' ')[0]} 👋`;
+    document.getElementById('welcomeMsg').textContent = `Hey, ${userData.name.split(' ')[0]}!`;
 
     const authHeaders = { 'Authorization': 'Bearer ' + token };
     async function apiFetch(url, opts = {}) {
