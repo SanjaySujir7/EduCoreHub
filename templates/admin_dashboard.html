@@ -2260,7 +2260,13 @@
                 <div class="toolbar-sep"></div>
                 <button class="toolbar-btn"><i class="fas fa-link"></i></button>
               </div>
-              <textarea class="notice-editor" placeholder="Write notice content here..."></textarea>
+              <textarea class="notice-editor" id="noticeContent" placeholder="Write notice content here..."></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+                <button type="button" onclick="checkGrammar('noticeContent', 'noticeGrammar')"
+                  style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-weight:600;"><i
+                    class="fas fa-magic"></i> AI Check</button>
+              </div>
+              <div id="noticeGrammar"></div>
             </div>
             <div class="form-grid" style="margin-bottom:16px;">
               <div class="form-group">
@@ -2681,6 +2687,45 @@
     }
 
     // ===== SCHEDULE NOTICE =====
+    async function checkGrammar(inputId, resultId) {
+      const inputEl = document.getElementById(inputId);
+      const resultEl = document.getElementById(resultId);
+      let text = inputEl.value;
+      if (!text.trim()) { resultEl.innerHTML = '<span style="color:var(--warn);font-size:12px;">Enter text to check.</span>'; return; }
+      resultEl.innerHTML = '<span style="color:var(--text3);font-size:12px;"><i class="fas fa-spinner fa-spin"></i> Checking and applying...</span>';
+      try {
+        const res = await fetch('https://api.languagetool.org/v2/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ text: text, language: 'en-US' })
+        });
+        const data = await res.json();
+        if (data.matches && data.matches.length > 0) {
+          let appliedCount = 0;
+          for (let i = data.matches.length - 1; i >= 0; i--) {
+            const m = data.matches[i];
+            if (m.replacements && m.replacements.length > 0) {
+              const rep = m.replacements[0].value;
+              text = text.substring(0, m.offset) + rep + text.substring(m.offset + m.length);
+              appliedCount++;
+            }
+          }
+          inputEl.value = text;
+          if (appliedCount > 0) {
+            resultEl.innerHTML = `<span style="color:var(--success);font-size:12px;"><i class="fas fa-magic"></i> Fixed ${appliedCount} issue(s) automatically!</span>`;
+          } else {
+            resultEl.innerHTML = '<span style="color:var(--warn);font-size:12px;"><i class="fas fa-exclamation-circle"></i> Issues found, but no auto-replacements available.</span>';
+          }
+          setTimeout(() => { resultEl.innerHTML = ''; }, 4000);
+        } else {
+          resultEl.innerHTML = '<span style="color:var(--success);font-size:12px;"><i class="fas fa-check-circle"></i> Looks good!</span>';
+          setTimeout(() => { resultEl.innerHTML = ''; }, 4000);
+        }
+      } catch (e) {
+        resultEl.innerHTML = '<span style="color:var(--danger);font-size:12px;">Failed to check grammar.</span>';
+      }
+    }
+
     document.getElementById('scheduleNotice').addEventListener('change', function () {
       document.getElementById('scheduleDate').style.display = this.checked ? 'block' : 'none';
     });
