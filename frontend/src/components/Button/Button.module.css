@@ -1,0 +1,61 @@
+.button {
+  padding: 0.85rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.02em;
+}
+
+.primary {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #ffffff;
+  box-shadow: var(--btn-glow);
+}
+
+.primary:hover {
+  filter: brightness(1.1);
+}
+
+.outline {
+  background: transparent;
+  border: 1.5px solid var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--accent-primary);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
