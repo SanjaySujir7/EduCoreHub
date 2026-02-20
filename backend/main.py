@@ -531,7 +531,7 @@ def get_notices(limit: Optional[int] = Query(None)):
     try:
         query = """
             SELECT n.notice_id, n.title, n.content, n.created_at,
-                   u.full_name AS posted_by
+                   u.full_name AS posted_by, n.posted_by AS posted_by_id
             FROM notices n
             JOIN users u ON n.posted_by = u.user_id
             ORDER BY n.created_at DESC
