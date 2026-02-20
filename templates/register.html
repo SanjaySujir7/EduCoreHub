@@ -698,6 +698,12 @@
                 ✅ Account created successfully! Redirecting to login…
             </div>
 
+            <!-- Error Banner -->
+            <div class="success-banner" id="errorBanner" role="alert"
+                style="background:rgba(255,77,109,0.1);border-color:rgba(255,77,109,0.3);color:#ff4d6d;display:none;">
+                <span id="errorBannerMsg">⚠ Something went wrong. Please try again.</span>
+            </div>
+
             <form id="registerForm" novalidate>
 
 
@@ -932,30 +938,63 @@
 
             if (!valid) return;
 
-            // ── Simulate submission ──
+            // ── Real API call ────────────────────────────────────────────────
             const btn = document.getElementById('submitBtn');
-            btn.classList.add('loading');
-            btn.querySelector('.btn-arrow').style.display = 'none';
-            btn.innerHTML = 'Creating Account… <span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-left:10px;"></span>';
+            const errorBanner = document.getElementById('errorBanner');
+            const errorBannerMsg = document.getElementById('errorBannerMsg');
+
             btn.disabled = true;
+            btn.innerHTML = 'Creating Account… <span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-left:10px;"></span>';
 
-            setTimeout(() => {
-                btn.classList.remove('loading');
-                btn.disabled = false;
+            errorBanner.style.display = 'none';
 
-                const banner = document.getElementById('successBanner');
-                banner.classList.add('visible');
-                banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Convert "3rd Semester" → 3
+            const semText = document.getElementById('semester').value; // e.g. "3rd Semester"
+            const semesterNumber = parseInt(semText);
 
-                document.getElementById('registerForm').reset();
-                document.getElementById('strengthMeter').classList.remove('visible');
+            const payload = {
+                full_name: name,
+                email: email,
+                usn: usn,
+                semester_number: semesterNumber,
+                phone: phone || null,
+                password: pw,
+            };
 
-                // Reset btn label
-                btn.innerHTML = 'Create Account <span class="btn-arrow">→</span>';
-
-                // Simulate redirect
-                setTimeout(() => { window.location.href = 'login.html'; }, 2500);
-            }, 1800);
+            fetch('http://127.0.0.1:8000/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            })
+                .then(async res => {
+                    const data = await res.json();
+                    if (res.ok) {
+                        // Success
+                        const banner = document.getElementById('successBanner');
+                        banner.classList.add('visible');
+                        banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        document.getElementById('registerForm').reset();
+                        document.getElementById('strengthMeter').classList.remove('visible');
+                        btn.innerHTML = 'Create Account <span class="btn-arrow">→</span>';
+                        btn.disabled = false;
+                        setTimeout(() => { window.location.href = 'login.html'; }, 2500);
+                    } else {
+                        // Server error (409 duplicate, 422 validation, 500, etc.)
+                        const msg = data.detail || 'Registration failed. Please try again.';
+                        errorBannerMsg.textContent = '⚠ ' + msg;
+                        errorBanner.style.display = 'flex';
+                        errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        btn.innerHTML = 'Create Account <span class="btn-arrow">→</span>';
+                        btn.disabled = false;
+                    }
+                })
+                .catch(() => {
+                    errorBannerMsg.textContent = '⚠ Could not connect to the server. Make sure the backend is running.';
+                    errorBanner.style.display = 'flex';
+                    errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    btn.innerHTML = 'Create Account <span class="btn-arrow">→</span>';
+                    btn.disabled = false;
+                });
         });
     </script>
 </body>
