@@ -430,6 +430,93 @@
       color: var(--text3);
     }
 
+    /* ===== DROPDOWNS ===== */
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      min-width: 220px;
+      padding: 8px 0;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: var(--transition);
+      z-index: 100;
+    }
+
+    .dropdown.active .dropdown-menu {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+
+    .dropdown-item:hover {
+      background: var(--surface2);
+      color: var(--accent);
+    }
+
+    .dropdown-item i {
+      width: 16px;
+      text-align: center;
+    }
+
+    .dropdown-header {
+      padding: 10px 16px 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+
+    .notif-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .notif-item:hover {
+      background: var(--surface2);
+    }
+
+    .notif-item:last-child {
+      border-bottom: none;
+    }
+
+    .notif-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .notif-time {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
     /* ===== MAIN ===== */
     .main {
       margin-left: var(--sidebar-w);
@@ -1792,6 +1879,140 @@
       top: 50%;
       margin-top: -12px;
     }
+
+    /* ===== RESOURCE CARDS ===== */
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .resource-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .resource-card:hover {
+      border-color: var(--border2);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .resource-icon-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .resource-icon-wrap.pdf {
+      background: rgba(255, 71, 87, 0.12);
+      color: #ff6b6b;
+    }
+
+    .resource-icon-wrap.ppt {
+      background: rgba(255, 107, 53, 0.12);
+      color: var(--warn);
+    }
+
+    .resource-icon-wrap.doc {
+      background: rgba(79, 124, 255, 0.12);
+      color: var(--accent);
+    }
+
+    .resource-icon-wrap.zip {
+      background: rgba(0, 212, 170, 0.12);
+      color: var(--accent3);
+    }
+
+    .resource-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .resource-meta {
+      font-size: 11px;
+      color: var(--text3);
+      margin-bottom: 12px;
+    }
+
+    .resource-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* ===== NOTICE FORM CARD ===== */
+    .notice-editor {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      min-height: 120px;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      resize: vertical;
+      width: 100%;
+      line-height: 1.6;
+    }
+
+    .notice-editor:focus {
+      border-color: var(--accent);
+    }
+
+    .editor-toolbar {
+      display: flex;
+      gap: 4px;
+      padding: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-btn {
+      width: 30px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      transition: var(--transition);
+    }
+
+    .toolbar-btn:hover {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .toolbar-btn.active {
+      background: rgba(79, 124, 255, 0.15);
+      color: var(--accent);
+    }
+
+    .toolbar-sep {
+      width: 1px;
+      background: var(--border);
+      margin: 4px 2px;
+    }
   </style>
 </head>
 
@@ -1872,10 +2093,19 @@
       <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" data-tip="Toggle Theme">
         <i class="fas fa-moon" id="themeIcon"></i>
       </button>
-      <button class="icon-btn" data-tip="Notifications">
-        <i class="fas fa-bell"></i>
-        <span class="notif-dot"></span>
-      </button>
+      <div class="dropdown" id="notifDropdown">
+        <button class="icon-btn" onclick="toggleDropdown('notifDropdown')" data-tip="Notifications">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot"></span>
+        </button>
+        <div class="dropdown-menu">
+          <div class="dropdown-header">Notifications</div>
+          <div class="notif-item">
+            <div class="notif-title">No new notifications</div>
+            <div class="notif-time">You're all caught up!</div>
+          </div>
+        </div>
+      </div>
       <div class="admin-profile">
         <div class="admin-avatar" id="adminAvatar">SA</div>
         <div class="admin-info">
@@ -2328,32 +2558,29 @@
         <div class="table-controls">
           <div class="search-input" style="max-width:280px;">
             <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search resources...">
+            <input type="text" placeholder="Search resources..." id="adminResSearch" onkeyup="filterAdminResources()">
           </div>
-          <select class="filter-select">
-            <option>All Subjects</option>
-            <option>Data Structures</option>
-            <option>DBMS</option>
-            <option>Networks</option>
-            <option>OS</option>
+          <select class="filter-select" id="adminResSubject" onchange="filterAdminResources()">
+            <option value="">All Subjects</option>
           </select>
-          <select class="filter-select">
-            <option>All Semesters</option>
-            <option>Sem 1</option>
-            <option>Sem 2</option>
-            <option>Sem 3</option>
-            <option>Sem 4</option>
-            <option>Sem 5</option>
-            <option>Sem 6</option>
+          <select class="filter-select" id="adminResSemester" onchange="filterAdminResources()">
+            <option value="">All Semesters</option>
+            <option value="1">Sem 1</option>
+            <option value="2">Sem 2</option>
+            <option value="3">Sem 3</option>
+            <option value="4">Sem 4</option>
+            <option value="5">Sem 5</option>
+            <option value="6">Sem 6</option>
           </select>
-          <select class="filter-select">
-            <option>All Types</option>
-            <option>PDF</option>
-            <option>PPT</option>
-            <option>DOC</option>
-            <option>Video</option>
+          <select class="filter-select" id="adminResType" onchange="filterAdminResources()">
+            <option value="">All Types</option>
+            <option value="PDF">PDF</option>
+            <option value="PPT">PPT</option>
+            <option value="DOC">DOC</option>
+            <option value="IMAGE">Image</option>
           </select>
-          <button class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Upload Resource</button>
+          <button class="btn btn-primary btn-sm" onclick="openAdminUploadModal()"><i class="fas fa-plus"></i> Upload
+            Resource</button>
         </div>
       </div>
 
@@ -2397,6 +2624,46 @@
       <div style="display:flex;gap:10px;margin-top:20px;">
         <button class="btn btn-primary" onclick="saveEdit()"><i class="fas fa-save"></i> Save Changes</button>
         <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Resource Modal -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal" style="max-width:500px;">
+      <div class="modal-header">
+        <div class="modal-title">Upload Resource</div>
+        <button class="btn-icon-sm" onclick="closeModal('uploadModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Resource Title</label>
+          <input type="text" class="form-input" id="upTitle" placeholder="e.g. System Design Notes">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject</label>
+          <select class="form-select" id="upSubject">
+            <option value="">Select Subject</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">File Type</label>
+          <select class="form-select" id="upType">
+            <option value="PDF">PDF</option>
+            <option value="PPT">PPT</option>
+            <option value="DOC">DOC</option>
+            <option value="IMAGE">Image</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">File</label>
+          <input type="file" class="form-input" id="upFile" accept=".pdf,.ppt,.pptx,.doc,.docx,.jpg,.jpeg,.png">
+        </div>
+      </div>
+      <div id="upAlert" style="display:none;margin-top:12px;font-size:13px;" class="alert"></div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button class="btn btn-primary" onclick="submitAdminUpload()"><i class="fas fa-upload"></i> Upload</button>
+        <button class="btn btn-secondary" onclick="closeModal('uploadModal')">Cancel</button>
       </div>
     </div>
   </div>
@@ -2452,6 +2719,21 @@
 
     let isDark = true;
     function toggleTheme() { isDark = !isDark; document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light'); document.getElementById('themeIcon').className = isDark ? 'fas fa-moon' : 'fas fa-sun'; }
+
+    // ===== DROPDOWNS =====
+    function toggleDropdown(id) {
+      const dropdown = document.getElementById(id);
+      document.querySelectorAll('.dropdown').forEach(d => {
+        if (d !== dropdown) d.classList.remove('active');
+      });
+      dropdown.classList.toggle('active');
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown') && !e.target.closest('.dropdown-menu')) {
+        document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+      }
+    });
 
     // ===== DATA =====
     let allUsers = [], pendingList = [], allNotices = [], allResources = [];
@@ -2651,14 +2933,80 @@
     async function loadResources() {
       const r = await apiFetch('/api/admin/all-resources');
       allResources = r || [];
+      const subs = await apiFetch('/api/subjects') || [];
+      populateAdminSubjects(subs);
       renderResources();
     }
-    function renderResources() {
+
+    function populateAdminSubjects(subs) {
+      const filterSel = document.getElementById('adminResSubject');
+      const upSel = document.getElementById('upSubject');
+      if (filterSel) filterSel.innerHTML = '<option value="">All Subjects</option>' + subs.map(s => `<option value="${s.subject_code}">${s.subject_code} - ${s.subject_name}</option>`).join('');
+      if (upSel) upSel.innerHTML = '<option value="">Select Subject</option>' + subs.map(s => `<option value="${s.subject_id}">${s.subject_code} - ${s.subject_name}</option>`).join('');
+    }
+
+    function filterAdminResources() {
+      const q = (document.getElementById('adminResSearch').value || '').toLowerCase();
+      const sem = document.getElementById('adminResSemester').value;
+      const subj = document.getElementById('adminResSubject').value;
+      const type = document.getElementById('adminResType').value;
+      let filtered = allResources.filter(r => {
+        const title = (r.title || '').toLowerCase();
+        const scode = (r.subject_code || '').toLowerCase();
+        const sname = (r.subject_name || '').toLowerCase();
+        if (q && !title.includes(q) && !scode.includes(q) && !sname.includes(q)) return false;
+        if (sem && r.semester_number != sem) return false;
+        if (subj && r.subject_code !== subj) return false;
+        if (type && r.file_type !== type) return false;
+        return true;
+      });
+      renderResources(filtered);
+    }
+
+    function openAdminUploadModal() {
+      document.getElementById('upTitle').value = '';
+      document.getElementById('upSubject').value = '';
+      document.getElementById('upFile').value = '';
+      document.getElementById('upAlert').style.display = 'none';
+      document.getElementById('uploadModal').classList.add('show');
+    }
+
+    async function submitAdminUpload() {
+      const title = document.getElementById('upTitle').value.trim();
+      const subId = document.getElementById('upSubject').value;
+      const type = document.getElementById('upType').value;
+      const file = document.getElementById('upFile').files[0];
+      const alertEl = document.getElementById('upAlert');
+
+      if (!title || !subId || !file) {
+        alertEl.style.display = 'block'; alertEl.className = 'alert error'; alertEl.textContent = 'Please fill all required fields.'; return;
+      }
+
+      const formData = new FormData();
+      formData.append('title', title); formData.append('subject_id', subId); formData.append('file_type', type); formData.append('file', file);
+      formData.append('description', 'Uploaded by Admin');
+
+      alertEl.style.display = 'block'; alertEl.className = 'alert'; alertEl.textContent = 'Uploading...';
+      try {
+        const res = await fetch('/api/faculty/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+        const data = await res.json();
+        if (res.ok) {
+          alertEl.className = 'alert success'; alertEl.textContent = 'Uploaded successfully!';
+          setTimeout(() => { closeModal('uploadModal'); loadResources(); loadStats(); }, 1500);
+        } else {
+          alertEl.className = 'alert error'; alertEl.textContent = data.detail || 'Upload failed.';
+        }
+      } catch (e) {
+        alertEl.className = 'alert error'; alertEl.textContent = 'Upload failed due to connection error.';
+      }
+    }
+
+    function renderResources(data = allResources) {
       const grid = document.getElementById('resourceGrid');
       const typeIconsLow = { PDF: 'fa-file-pdf', PPT: 'fa-file-powerpoint', DOC: 'fa-file-word', IMAGE: 'fa-file-image' };
       const typeClass = { PDF: 'pdf', PPT: 'ppt', DOC: 'doc', IMAGE: 'zip' };
-      if (!allResources.length) { grid.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:40px 0;grid-column:1/-1">No resources yet.</div>'; return; }
-      grid.innerHTML = allResources.map(r => `
+      if (!data.length) { grid.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:40px 0;grid-column:1/-1">No resources match your search.</div>'; return; }
+      grid.innerHTML = data.map(r => `
     <div class="resource-card">
       <div class="resource-icon-wrap ${typeClass[r.file_type] || 'pdf'}"><i class="fas ${typeIconsLow[r.file_type] || 'fa-file'}"></i></div>
       <div class="resource-name">${r.title}</div>

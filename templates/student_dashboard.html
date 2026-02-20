@@ -1826,7 +1826,10 @@
             const type = document.getElementById('filterType').value;
 
             let filtered = allResources.filter(r => {
-                if (q && !r.title.toLowerCase().includes(q) && !(r.subject_code || '').toLowerCase().includes(q) && !(r.subject_name || '').toLowerCase().includes(q)) return false;
+                const rTitle = (r.title || '').toLowerCase();
+                const rCode = (r.subject_code || '').toLowerCase();
+                const rName = (r.subject_name || '').toLowerCase();
+                if (q && !rTitle.includes(q) && !rCode.includes(q) && !rName.includes(q)) return false;
                 if (sem && r.semester_number != sem) return false;
                 if (subj && r.subject_code !== subj) return false;
                 if (type && r.file_type !== type) return false;

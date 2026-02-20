@@ -1411,7 +1411,22 @@
         function renderNoticeBoard() {
             const el = document.getElementById('noticeBoard'); const dots = ['warn', 'teal', 'green']; const myId = parseInt(userData.id);
             if (!allNotices.length) { el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:60px 0">No notices posted yet.</div>'; return; }
-            el.innerHTML = allNotices.map((n, i) => `<div class="notice-item" style="flex-direction:column;gap:8px;padding:20px"><div style="display:flex;align-items:center;gap:12px;width:100%"><div class="notice-dot ${dots[i % 3]}"></div><div style="flex:1"><div style="font-size:15px;font-weight:700;margin-bottom:2px">${n.title}</div><div style="font-size:11px;color:var(--text3)">${formatDate(n.created_at)} · ${n.posted_by || ''}</div></div>${isRecent(n.created_at) ? '<span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(0,201,167,.15);color:var(--accent)">🆕 New</span>' : ''}</div><div style="font-size:13px;color:var(--text2);padding-left:22px">${n.content}</div></div>`).join('');
+            el.innerHTML = allNotices.map((n, i) => `<div class="notice-item" style="flex-direction:column;gap:8px;padding:20px"><div style="display:flex;align-items:center;gap:12px;width:100%"><div class="notice-dot ${dots[i % 3]}"></div><div style="flex:1"><div style="font-size:15px;font-weight:700;margin-bottom:2px">${n.title}</div><div style="font-size:11px;color:var(--text3)">${formatDate(n.created_at)} · ${n.posted_by || ''}</div></div>${isRecent(n.created_at) ? '<span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:rgba(0,201,167,.15);color:var(--accent)">🆕 New</span>' : ''}${n.posted_by_id === myId ? `<button class="btn-icon-sm del" onclick="deleteNotice(${n.notice_id}, this)" style="align-self:flex-start;margin-left:auto;"><i class="fas fa-trash"></i></button>` : ''}</div><div style="font-size:13px;color:var(--text2);padding-left:22px">${n.content}</div></div>`).join('');
+        }
+
+        async function deleteNotice(nid, btn) {
+            if (!confirm('Delete this notice?')) return;
+            const r = await fetch(`/api/faculty/notice/${nid}`, { method: 'DELETE', headers: authHeaders });
+            if (r.ok) {
+                const item = btn.closest('.notice-item');
+                item.style.opacity = '0';
+                item.style.transition = 'opacity .3s';
+                setTimeout(() => item.remove(), 300);
+                loadStats();
+            } else {
+                const e = await r.json().catch(() => ({}));
+                alert(e.detail || 'Failed to delete notice.');
+            }
         }
 
         // ===== LOAD PENDING REVIEWS =====
