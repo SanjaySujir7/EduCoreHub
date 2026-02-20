@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Registration | EduCoreHub – Departmental Digital Resource & Knowledge Hub</title>
+    <meta name="description"
+        content="Create your account on EduCoreHub – the centralized digital library and notice board for BCA Department." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #6c63ff;
+            --primary-dark: #4e48c4;
+            --primary-light: #9d97ff;
+            --secondary: #ff6584;
+            --accent: #43e97b;
+            --accent2: #38f9d7;
+            --bg: #0d0f18;
+            --surface: #13172a;
+            --surface2: #1c2140;
+            --border: rgba(108, 99, 255, 0.25);
+            --text: #e8eaf6;
+            --text-muted: #8b90b5;
+            --error: #ff4d6d;
+            --success: #43e97b;
+            --card-radius: 20px;
+            --input-radius: 12px;
+            --transition: 0.3s ease;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background blobs */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px;
+            left: -200px;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(108, 99, 255, 0.18) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: floatBlob1 12s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -200px;
+            right: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(67, 233, 123, 0.13) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: floatBlob2 15s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes floatBlob1 {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(60px, 80px) scale(1.1);
+            }
+        }
+
+        @keyframes floatBlob2 {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(-40px, -60px) scale(1.08);
+            }
+        }
+
+        .page-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            max-width: 1050px;
+            width: 100%;
+            background: var(--surface);
+            border-radius: var(--card-radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(108, 99, 255, 0.08);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            animation: cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Left Panel */
+        .left-panel {
+            background: linear-gradient(145deg, #1a1d3a 0%, #0f1122 100%);
+            padding: 56px 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, rgba(108, 99, 255, 0.22) 0%, transparent 65%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 52px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary), var(--accent2));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 8px 24px rgba(108, 99, 255, 0.45);
+        }
+
+        .brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 40%, var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .left-heading {
+            font-family: 'Outfit', sans-serif;
+            font-size: 34px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-heading span {
+            background: linear-gradient(135deg, var(--primary-light), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .left-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.75;
+            margin-bottom: 44px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .features-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13.5px;
+            color: var(--text-muted);
+        }
+
+        .feature-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(108, 99, 255, 0.15);
+            border: 1px solid rgba(108, 99, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .left-panel .login-link-bottom {
+            margin-top: auto;
+            padding-top: 40px;
+            font-size: 13px;
+            color: var(--text-muted);
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-panel .login-link-bottom a {
+            color: var(--primary-light);
+            font-weight: 600;
+            text-decoration: none;
+            transition: color var(--transition);
+        }
+
+        .left-panel .login-link-bottom a:hover {
+            color: #fff;
+        }
+
+        /* Right Panel – Form */
+        .right-panel {
+            padding: 48px 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: var(--surface);
+        }
+
+        .form-header {
+            margin-bottom: 32px;
+        }
+
+        .form-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .form-header p {
+            font-size: 13.5px;
+            color: var(--text-muted);
+        }
+
+        /* Form groups */
+        .form-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+            pointer-events: none;
+            transition: color var(--transition);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px 14px 13px 42px;
+            background: var(--surface2);
+            border: 1.5px solid rgba(255, 255, 255, 0.07);
+            border-radius: var(--input-radius);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all var(--transition);
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b90b5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+
+        select option {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary);
+            background: rgba(108, 99, 255, 0.07);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+        }
+
+        input:focus+.input-icon,
+        .input-wrap:focus-within .input-icon {
+            color: var(--primary-light);
+        }
+
+        input.error,
+        select.error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.15);
+        }
+
+        .field-error {
+            font-size: 11.5px;
+            color: var(--error);
+            min-height: 16px;
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .field-error.visible {
+            display: flex;
+        }
+
+        /* Password strength */
+        .password-strength {
+            margin-top: 6px;
+            display: none;
+        }
+
+        .password-strength.visible {
+            display: block;
+        }
+
+        .strength-bar {
+            height: 4px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.07);
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.4s ease, background 0.4s ease;
+        }
+
+        .strength-label {
+            font-size: 11px;
+            margin-top: 4px;
+            color: var(--text-muted);
+        }
+
+        /* Conditional fields */
+        .conditional-fields {
+            display: contents;
+        }
+
+        .hidden-field {
+            display: none !important;
+        }
+
+        /* Password toggle */
+        .toggle-pw {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            transition: color var(--transition);
+        }
+
+        .toggle-pw:hover {
+            color: var(--primary-light);
+        }
+
+        input.has-toggle {
+            padding-right: 44px;
+        }
+
+        /* Terms checkbox */
+        .terms-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .terms-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            padding: 0;
+            margin: 2px 0 0 0;
+            accent-color: var(--primary);
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .terms-row label {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 400;
+            cursor: pointer;
+            line-height: 1.6;
+        }
+
+        .terms-row label a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Submit */
+        .submit-btn {
+            margin-top: 8px;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: var(--input-radius);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 6px 24px rgba(108, 99, 255, 0.4);
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent);
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 32px rgba(108, 99, 255, 0.55);
+        }
+
+        .submit-btn:hover::before {
+            opacity: 1;
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn .btn-arrow {
+            display: inline-block;
+            margin-left: 8px;
+            transition: transform var(--transition);
+        }
+
+        .submit-btn:hover .btn-arrow {
+            transform: translateX(4px);
+        }
+
+        /* Loading state */
+        .submit-btn.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .submit-btn.loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Success Banner */
+        .success-banner {
+            display: none;
+            background: rgba(67, 233, 123, 0.1);
+            border: 1px solid rgba(67, 233, 123, 0.3);
+            border-radius: var(--input-radius);
+            padding: 14px 16px;
+            font-size: 13.5px;
+            color: var(--accent);
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .success-banner.visible {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Login redirect */
+        .login-redirect {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .login-redirect a {
+            color: var(--primary-light);
+            font-weight: 600;
+            text-decoration: none;
+            transition: color var(--transition);
+        }
+
+        .login-redirect a:hover {
+            color: #fff;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .left-panel {
+                display: none;
+            }
+
+            .right-panel {
+                padding: 36px 24px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-wrapper">
+
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <div class="brand-logo">
+                <div class="brand-icon">🎓</div>
+                <span class="brand-name">EduCoreHub</span>
+            </div>
+
+            <h1 class="left-heading">
+                Your Department's<br />
+                <span>Digital Hub</span>
+            </h1>
+            <p class="left-desc">
+                A centralized portal for official notices, study materials,
+                and peer resources — all in one secure place for the BCA Department.
+            </p>
+
+            <ul class="features-list">
+                <li>
+                    <span class="feature-dot">📚</span>
+                    Smart Repository with Semester &amp; Subject filters
+                </li>
+                <li>
+                    <span class="feature-dot">📋</span>
+                    Digital Notice Board with real-time updates
+                </li>
+                <li>
+                    <span class="feature-dot">🔒</span>
+                    Role-based access for HOD, Faculty &amp; Students
+                </li>
+                <li>
+                    <span class="feature-dot">✅</span>
+                    Moderated uploads with Faculty approval system
+                </li>
+            </ul>
+
+            <div class="login-link-bottom">
+                Already have an account? <a href="login.html">Sign in here →</a>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
+            <div class="form-header">
+                <h2>Create Account</h2>
+                <p>Fill in your details to register as a student</p>
+            </div>
+
+
+
+            <!-- Success Banner -->
+            <div class="success-banner" id="successBanner" role="alert">
+                ✅ Account created successfully! Redirecting to login…
+            </div>
+
+            <form id="registerForm" novalidate>
+
+
+                <div class="form-fields">
+
+                    <!-- Name + Email (common) -->
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label for="fullName">Full Name</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">👤</span>
+                                <input type="text" id="fullName" name="fullName" placeholder="e.g. Priya Sharma"
+                                    autocomplete="name" required />
+                            </div>
+                            <span class="field-error" id="err-fullName">⚠ Please enter your full name.</span>
+                        </div>
+                        <div class="field-group">
+                            <label for="email">Email Address</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">✉️</span>
+                                <input type="email" id="email" name="email" placeholder="you@college.edu"
+                                    autocomplete="email" required />
+                            </div>
+                            <span class="field-error" id="err-email">⚠ Enter a valid email address.</span>
+                        </div>
+                    </div>
+
+                    <!-- Student-only fields -->
+                    <div id="studentFields">
+                        <div class="form-row">
+                            <div class="field-group">
+                                <label for="usn">USN</label>
+                                <div class="input-wrap">
+                                    <span class="input-icon">🪪</span>
+                                    <input type="text" id="usn" name="usn" placeholder="e.g. 1BG22BCA01"
+                                        maxlength="12" />
+                                </div>
+                                <span class="field-error" id="err-usn">⚠ Enter a valid USN (e.g. 1BG22BCA01).</span>
+                            </div>
+                            <div class="field-group">
+                                <label for="semester">Semester</label>
+                                <div class="input-wrap">
+                                    <span class="input-icon">📅</span>
+                                    <select id="semester" name="semester">
+                                        <option value="" disabled selected>Select semester</option>
+                                        <option>1st Semester</option>
+                                        <option>2nd Semester</option>
+                                        <option>3rd Semester</option>
+                                        <option>4th Semester</option>
+                                        <option>5th Semester</option>
+                                        <option>6th Semester</option>
+                                    </select>
+                                </div>
+                                <span class="field-error" id="err-semester">⚠ Please select your semester.</span>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Phone (common) -->
+                    <div class="field-group">
+                        <label for="phone">Phone Number</label>
+                        <div class="input-wrap">
+                            <span class="input-icon">📞</span>
+                            <input type="tel" id="phone" name="phone" placeholder="+91 98765 43210" maxlength="15"
+                                autocomplete="tel" />
+                        </div>
+                        <span class="field-error" id="err-phone">⚠ Enter a valid 10-digit phone number.</span>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label for="password">Password</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">🔒</span>
+                                <input type="password" id="password" name="password" placeholder="Min 8 characters"
+                                    class="has-toggle" autocomplete="new-password" required />
+                                <button type="button" class="toggle-pw" onclick="togglePw('password', this)"
+                                    aria-label="Toggle password visibility">👁️</button>
+                            </div>
+                            <div class="password-strength" id="strengthMeter">
+                                <div class="strength-bar">
+                                    <div class="strength-fill" id="strengthFill"></div>
+                                </div>
+                                <div class="strength-label" id="strengthLabel"></div>
+                            </div>
+                            <span class="field-error" id="err-password">⚠ Password must be at least 8 characters.</span>
+                        </div>
+                        <div class="field-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">🔒</span>
+                                <input type="password" id="confirmPassword" name="confirmPassword"
+                                    placeholder="Re-enter password" class="has-toggle" autocomplete="new-password"
+                                    required />
+                                <button type="button" class="toggle-pw" onclick="togglePw('confirmPassword', this)"
+                                    aria-label="Toggle confirm password visibility">👁️</button>
+                            </div>
+                            <span class="field-error" id="err-confirmPassword">⚠ Passwords do not match.</span>
+                        </div>
+                    </div>
+
+                    <!-- Terms -->
+                    <div class="terms-row">
+                        <input type="checkbox" id="terms" name="terms" />
+                        <label for="terms">
+                            I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a> of
+                            EduCoreHub.
+                        </label>
+                    </div>
+                    <span class="field-error" id="err-terms">⚠ You must accept the terms to continue.</span>
+
+                    <!-- Submit -->
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        Create Account <span class="btn-arrow">→</span>
+                    </button>
+                </div>
+            </form>
+
+            <div class="login-redirect">
+                Already registered? <a href="login.html">Sign in to your account</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // ── Password Toggle ─────────────────────────────────────────────────────────
+        function togglePw(id, btn) {
+            const input = document.getElementById(id);
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.textContent = isHidden ? '🙈' : '👁️';
+        }
+
+        // ── Password Strength ───────────────────────────────────────────────────────
+        document.getElementById('password').addEventListener('input', function () {
+            const pw = this.value;
+            const meter = document.getElementById('strengthMeter');
+            const fill = document.getElementById('strengthFill');
+            const label = document.getElementById('strengthLabel');
+
+            if (!pw) { meter.classList.remove('visible'); return; }
+            meter.classList.add('visible');
+
+            let score = 0;
+            if (pw.length >= 8) score++;
+            if (pw.length >= 12) score++;
+            if (/[A-Z]/.test(pw)) score++;
+            if (/[0-9]/.test(pw)) score++;
+            if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+            const levels = [
+                { pct: '20%', color: '#ff4d6d', text: 'Very Weak' },
+                { pct: '40%', color: '#ff9f43', text: 'Weak' },
+                { pct: '60%', color: '#ffd32a', text: 'Fair' },
+                { pct: '80%', color: '#a29bfe', text: 'Strong' },
+                { pct: '100%', color: '#43e97b', text: 'Very Strong' },
+            ];
+            const lvl = levels[Math.min(score - 1, 4)] || levels[0];
+            fill.style.width = lvl.pct;
+            fill.style.background = lvl.color;
+            label.textContent = lvl.text;
+            label.style.color = lvl.color;
+        });
+
+        // ── Validation Helpers ──────────────────────────────────────────────────────
+        function showError(fieldId, errId) {
+            const el = document.getElementById(fieldId);
+            const err = document.getElementById(errId);
+            if (el) el.classList.add('error');
+            if (err) err.classList.add('visible');
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+            document.querySelectorAll('.field-error').forEach(el => el.classList.remove('visible'));
+        }
+
+        function validateEmail(e) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+        }
+
+        function validateUSN(u) {
+            return /^[A-Z0-9]{6,12}$/i.test(u);
+        }
+
+        function validatePhone(p) {
+            const cleaned = p.replace(/[\s\-\(\)\+]/g, '');
+            return cleaned === '' || /^[0-9]{10}$/.test(cleaned);
+        }
+
+        // ── Form Submission ─────────────────────────────────────────────────────────
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearErrors();
+
+            let valid = true;
+
+            // Name
+            const name = document.getElementById('fullName').value.trim();
+            if (name.length < 2) { showError('fullName', 'err-fullName'); valid = false; }
+
+            // Email
+            const email = document.getElementById('email').value.trim();
+            if (!validateEmail(email)) { showError('email', 'err-email'); valid = false; }
+
+            // Student fields
+            const usn = document.getElementById('usn').value.trim();
+            if (!validateUSN(usn)) { showError('usn', 'err-usn'); valid = false; }
+            const sem = document.getElementById('semester').value;
+            if (!sem) { showError('semester', 'err-semester'); valid = false; }
+
+            // Phone (optional but validate format if given)
+            const phone = document.getElementById('phone').value.trim();
+            if (phone && !validatePhone(phone)) { showError('phone', 'err-phone'); valid = false; }
+
+            // Password
+            const pw = document.getElementById('password').value;
+            if (pw.length < 8) { showError('password', 'err-password'); valid = false; }
+
+            // Confirm password
+            const cpw = document.getElementById('confirmPassword').value;
+            if (cpw !== pw) { showError('confirmPassword', 'err-confirmPassword'); valid = false; }
+
+            // Terms
+            if (!document.getElementById('terms').checked) {
+                document.getElementById('err-terms').classList.add('visible'); valid = false;
+            }
+
+            if (!valid) return;
+
+            // ── Simulate submission ──
+            const btn = document.getElementById('submitBtn');
+            btn.classList.add('loading');
+            btn.querySelector('.btn-arrow').style.display = 'none';
+            btn.innerHTML = 'Creating Account… <span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-left:10px;"></span>';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+
+                const banner = document.getElementById('successBanner');
+                banner.classList.add('visible');
+                banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                document.getElementById('registerForm').reset();
+                document.getElementById('strengthMeter').classList.remove('visible');
+
+                // Reset btn label
+                btn.innerHTML = 'Create Account <span class="btn-arrow">→</span>';
+
+                // Simulate redirect
+                setTimeout(() => { window.location.href = 'login.html'; }, 2500);
+            }, 1800);
+        });
+    </script>
+</body>
+
+</html>
