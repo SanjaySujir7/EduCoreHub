@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | EduCoreHub</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --bg2: #0f1528;
+            --bg3: #151d35;
+            --surface: #1a2440;
+            --surface2: #1f2d4e;
+            --border: rgba(99, 133, 255, 0.12);
+            --border2: rgba(99, 133, 255, 0.2);
+            --accent: #4f7cff;
+            --accent2: #7b5ea7;
+            --accent3: #00d4aa;
+            --warn: #ff6b35;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --text: #e8ecff;
+            --text2: #8899bb;
+            --text3: #556080;
+            --sidebar-w: 260px;
+            --topbar-h: 64px;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-accent: 0 8px 32px rgba(79, 124, 255, 0.2);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)
+        }
+
+        [data-theme="light"] {
+            --bg: #f0f2f8;
+            --bg2: #e8ebf5;
+            --bg3: #dde2f0;
+            --surface: #ffffff;
+            --surface2: #f5f7ff;
+            --border: rgba(79, 124, 255, 0.1);
+            --border2: rgba(79, 124, 255, 0.2);
+            --text: #1a2240;
+            --text2: #556080;
+            --text3: #8899bb;
+            --shadow: 0 8px 32px rgba(79, 124, 255, 0.08);
+            --shadow-accent: 0 8px 32px rgba(79, 124, 255, 0.15)
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background .4s, color .4s
+        }
+
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 200;
+            transition: var(--transition), width .3s;
+            overflow: hidden
+        }
+
+        .sidebar.collapsed {
+            width: 68px
+        }
+
+        .sidebar-logo {
+            padding: 20px 20px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+            min-height: var(--topbar-h)
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(79, 124, 255, 0.3)
+        }
+
+        .logo-text {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -.5px;
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity .2s
+        }
+
+        .sidebar.collapsed .logo-text {
+            opacity: 0
+        }
+
+        .logo-text span {
+            color: var(--accent)
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 10px;
+            overflow-y: auto;
+            overflow-x: hidden
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 3px
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 4px
+        }
+
+        .nav-section-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text3);
+            padding: 8px 10px 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity .2s
+        }
+
+        .sidebar.collapsed .nav-section-label {
+            opacity: 0
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            margin-bottom: 2px;
+            white-space: nowrap
+        }
+
+        .nav-item:hover {
+            background: var(--surface)
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(79, 124, 255, 0.15), rgba(0, 212, 170, 0.1));
+            border: 1px solid rgba(79, 124, 255, 0.2)
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            bottom: 20%;
+            width: 3px;
+            background: var(--accent);
+            border-radius: 0 3px 3px 0
+        }
+
+        .nav-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 15px;
+            color: var(--text2);
+            flex-shrink: 0;
+            transition: var(--transition)
+        }
+
+        .nav-item.active .nav-icon {
+            color: var(--accent);
+            background: rgba(79, 124, 255, 0.1)
+        }
+
+        .nav-item:hover .nav-icon {
+            color: var(--accent)
+        }
+
+        .nav-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text2);
+            transition: var(--transition)
+        }
+
+        .nav-item.active .nav-label {
+            color: var(--text)
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--warn);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 20px;
+            flex-shrink: 0
+        }
+
+        .sidebar.collapsed .nav-label,
+        .sidebar.collapsed .nav-badge,
+        .sidebar.collapsed .nav-section-label {
+            opacity: 0;
+            pointer-events: none
+        }
+
+        .sidebar-bottom {
+            padding: 12px;
+            border-top: 1px solid var(--border)
+        }
+
+        .sidebar-toggle-btn {
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text2);
+            cursor: pointer;
+            font-size: 14px;
+            transition: var(--transition)
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: var(--surface2);
+            color: var(--text)
+        }
+
+        .sidebar.collapsed .toggle-label {
+            display: none
+        }
+
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-w);
+            right: 0;
+            height: var(--topbar-h);
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 16px;
+            z-index: 100;
+            transition: left .3s;
+            backdrop-filter: blur(12px)
+        }
+
+        .topbar.collapsed {
+            left: 68px
+        }
+
+        .topbar-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            flex: 1
+        }
+
+        .topbar-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 8px 16px;
+            width: 240px;
+            transition: var(--transition)
+        }
+
+        .topbar-search:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.1)
+        }
+
+        .topbar-search input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 13px;
+            width: 100%;
+            font-family: 'DM Sans', sans-serif
+        }
+
+        .topbar-search input::placeholder {
+            color: var(--text3)
+        }
+
+        .topbar-search i {
+            color: var(--text3);
+            font-size: 13px
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            transition: var(--transition);
+            position: relative
+        }
+
+        .icon-btn:hover {
+            background: var(--surface2);
+            color: var(--text);
+            border-color: var(--border2)
+        }
+
+        .notif-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 7px;
+            height: 7px;
+            background: var(--warn);
+            border-radius: 50%;
+            border: 2px solid var(--bg2)
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px 6px 6px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            cursor: pointer;
+            transition: var(--transition)
+        }
+
+        .user-profile:hover {
+            border-color: var(--border2);
+            background: var(--surface2)
+        }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0
+        }
+
+        .user-info {
+            line-height: 1.2
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 600
+        }
+
+        .user-role {
+            font-size: 10px;
+            color: var(--text3)
+        }
+
+        .main {
+            margin-left: var(--sidebar-w);
+            margin-top: var(--topbar-h);
+            flex: 1;
+            padding: 28px;
+            transition: margin-left .3s;
+            min-height: calc(100vh - var(--topbar-h))
+        }
+
+        .main.collapsed {
+            margin-left: 68px
+        }
+
+        .page {
+            display: none;
+            animation: fadeSlideIn .35s ease
+        }
+
+        .page.active {
+            display: block
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .page-header {
+            margin-bottom: 28px
+        }
+
+        .page-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 28px;
+            letter-spacing: -.5px
+        }
+
+        .page-header p {
+            color: var(--text2);
+            margin-top: 4px;
+            font-size: 14px
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            cursor: default;
+            transition: var(--transition)
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border2);
+            box-shadow: var(--shadow)
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            opacity: .06;
+            transform: translate(30%, -30%)
+        }
+
+        .stat-card.blue::before {
+            background: var(--accent)
+        }
+
+        .stat-card.purple::before {
+            background: var(--accent2)
+        }
+
+        .stat-card.teal::before {
+            background: var(--accent3)
+        }
+
+        .stat-card.warn::before {
+            background: var(--warn)
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 16px
+        }
+
+        .stat-card.blue .stat-icon {
+            background: rgba(79, 124, 255, 0.12);
+            color: var(--accent)
+        }
+
+        .stat-card.purple .stat-icon {
+            background: rgba(123, 94, 167, 0.12);
+            color: var(--accent2)
+        }
+
+        .stat-card.teal .stat-icon {
+            background: rgba(0, 212, 170, 0.12);
+            color: var(--accent3)
+        }
+
+        .stat-card.warn .stat-icon {
+            background: rgba(255, 107, 53, 0.15);
+            color: var(--warn)
+        }
+
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+            letter-spacing: -1px;
+            animation: countUp .6s ease forwards
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text2);
+            font-weight: 500
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px
+        }
+
+        @media(max-width:1100px) {
+            .dash-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            transition: var(--transition)
+        }
+
+        .card:hover {
+            border-color: var(--border2)
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px
+        }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 16px
+        }
+
+        .card-action {
+            font-size: 12px;
+            color: var(--accent);
+            cursor: pointer;
+            font-weight: 500
+        }
+
+        .card-action:hover {
+            text-decoration: underline
+        }
+
+        .notice-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 14px
+        }
+
+        .notice-item {
+            display: flex;
+            gap: 14px;
+            padding: 14px;
+            background: var(--bg3);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            cursor: pointer
+        }
+
+        .notice-item:hover {
+            border-color: var(--border2);
+            background: var(--surface2)
+        }
+
+        .notice-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 4px
+        }
+
+        .notice-dot.blue {
+            background: var(--accent);
+            box-shadow: 0 0 8px rgba(79, 124, 255, 0.5)
+        }
+
+        .notice-dot.teal {
+            background: var(--accent3);
+            box-shadow: 0 0 8px rgba(0, 212, 170, 0.5)
+        }
+
+        .notice-dot.warn {
+            background: var(--warn);
+            box-shadow: 0 0 8px rgba(255, 107, 53, 0.5)
+        }
+
+        .notice-content {
+            flex: 1;
+            min-width: 0
+        }
+
+        .notice-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 3px
+        }
+
+        .notice-meta {
+            font-size: 11px;
+            color: var(--text3)
+        }
+
+        .notice-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+            flex-shrink: 0;
+            align-self: start
+        }
+
+        .badge-new {
+            background: rgba(79, 124, 255, 0.15);
+            color: var(--accent)
+        }
+
+        .badge-pinned {
+            background: rgba(255, 107, 53, 0.15);
+            color: var(--warn)
+        }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 16px
+        }
+
+        .resource-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: var(--transition);
+            cursor: pointer
+        }
+
+        .resource-card:hover {
+            border-color: var(--border2);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow)
+        }
+
+        .resource-icon-wrap {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 14px
+        }
+
+        .resource-icon-wrap.pdf {
+            background: rgba(255, 71, 87, 0.12);
+            color: #ff6b6b
+        }
+
+        .resource-icon-wrap.ppt {
+            background: rgba(255, 107, 53, 0.12);
+            color: var(--warn)
+        }
+
+        .resource-icon-wrap.doc {
+            background: rgba(79, 124, 255, 0.12);
+            color: var(--accent)
+        }
+
+        .resource-icon-wrap.image {
+            background: rgba(0, 212, 170, 0.12);
+            color: var(--accent3)
+        }
+
+        .resource-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px
+        }
+
+        .resource-meta {
+            font-size: 11px;
+            color: var(--text3);
+            margin-bottom: 12px
+        }
+
+        .resource-actions {
+            display: flex;
+            gap: 6px
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px
+        }
+
+        .search-input input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 13px;
+            width: 100%;
+            font-family: 'DM Sans', sans-serif
+        }
+
+        .search-input input::placeholder {
+            color: var(--text3)
+        }
+
+        .search-input:focus-within {
+            border-color: var(--accent)
+        }
+
+        .filter-select {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            padding-right: 32px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238899bb' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center
+        }
+
+        .filter-select:focus {
+            border-color: var(--accent)
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        .data-table th {
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text3);
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .data-table td {
+            padding: 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            vertical-align: middle
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none
+        }
+
+        .data-table tbody tr {
+            transition: background .2s
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--surface2)
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600
+        }
+
+        .status-badge.approved {
+            background: rgba(46, 213, 115, 0.12);
+            color: var(--success)
+        }
+
+        .status-badge.pending {
+            background: rgba(255, 107, 53, 0.12);
+            color: var(--warn)
+        }
+
+        .status-badge.rejected {
+            background: rgba(255, 71, 87, 0.12);
+            color: var(--danger)
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            transition: var(--transition)
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 16px rgba(79, 124, 255, 0.3)
+        }
+
+        .btn-primary:hover {
+            background: #3d6bff;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(79, 124, 255, 0.4)
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text)
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--border2);
+            background: var(--surface2)
+        }
+
+        .btn-sm {
+            padding: 7px 14px;
+            font-size: 12px
+        }
+
+        .btn-danger {
+            background: rgba(255, 71, 87, 0.12);
+            color: var(--danger);
+            border: 1px solid rgba(255, 71, 87, 0.2)
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border2);
+            border-radius: var(--radius);
+            padding: 48px 24px;
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+            background: var(--bg3)
+        }
+
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: var(--accent);
+            background: rgba(79, 124, 255, 0.03)
+        }
+
+        .drop-icon {
+            font-size: 40px;
+            color: var(--accent);
+            margin-bottom: 16px;
+            opacity: .7
+        }
+
+        .drop-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px
+        }
+
+        .drop-sub {
+            font-size: 13px;
+            color: var(--text2);
+            margin-bottom: 16px
+        }
+
+        .file-tag {
+            padding: 3px 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 11px;
+            color: var(--text3)
+        }
+
+        .progress-bar-wrap {
+            background: var(--bg3);
+            border-radius: 20px;
+            height: 8px;
+            overflow: hidden;
+            margin: 8px 0
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent3));
+            border-radius: 20px;
+            transition: width .5s ease
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px
+        }
+
+        @media(max-width:600px) {
+            .form-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .form-group.full {
+            grid-column: 1/-1
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text2);
+            letter-spacing: .3px
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 11px 14px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            outline: none;
+            transition: var(--transition)
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.1)
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--text3)
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px
+        }
+
+        .alert.show {
+            display: flex
+        }
+
+        .alert.success {
+            background: rgba(46, 213, 115, 0.1);
+            border: 1px solid rgba(46, 213, 115, 0.2);
+            color: var(--success)
+        }
+
+        .alert.error {
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid rgba(255, 71, 87, 0.2);
+            color: var(--danger)
+        }
+
+        .profile-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+            text-align: center
+        }
+
+        .profile-avatar-lg {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            margin: 0 auto 16px
+        }
+
+        .profile-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 4px
+        }
+
+        .profile-detail {
+            font-size: 13px;
+            color: var(--text2);
+            margin-bottom: 4px
+        }
+
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 24px;
+            text-align: left
+        }
+
+        .profile-info-item {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px
+        }
+
+        .profile-info-label {
+            font-size: 11px;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px
+        }
+
+        .profile-info-value {
+            font-size: 15px;
+            font-weight: 600
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 4px
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 150;
+            backdrop-filter: blur(4px)
+        }
+
+        @media(max-width:768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-w) !important
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0)
+            }
+
+            .topbar {
+                left: 0 !important
+            }
+
+            .main {
+                margin-left: 0 !important;
+                padding: 16px
+            }
+
+            .mobile-overlay.show {
+                display: block
+            }
+
+            .topbar-search {
+                display: none
+            }
+
+            .mobile-menu-btn {
+                display: flex !important
+            }
+
+            .dash-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .mobile-menu-btn {
+            display: none
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid rgba(255, 71, 87, 0.2);
+            border-radius: var(--radius-sm);
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: var(--transition);
+            margin-top: 8px
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 71, 87, 0.2)
+        }
+
+        [data-tip] {
+            position: relative
+        }
+
+        [data-tip]::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            top: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .2s;
+            z-index: 999
+        }
+
+        [data-tip]:hover::after {
+            opacity: 1
+        }
+
+        .sidebar.collapsed [data-tip]::after {
+            left: 120%;
+            transform: none;
+            top: 50%;
+            margin-top: -12px
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div class="logo-text">Edu<span>Core</span>Hub</div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Overview</div>
+            <div class="nav-item active" onclick="navigate('dashboard',this)" data-tip="Dashboard">
+                <div class="nav-icon"><i class="fas fa-home"></i></div>
+                <span class="nav-label">Dashboard</span>
+            </div>
+            <div class="nav-section-label">Resources</div>
+            <div class="nav-item" onclick="navigate('browse',this)" data-tip="Browse Resources">
+                <div class="nav-icon"><i class="fas fa-search"></i></div>
+                <span class="nav-label">Browse Resources</span>
+            </div>
+            <div class="nav-item" onclick="navigate('upload',this)" data-tip="Upload Resource">
+                <div class="nav-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <span class="nav-label">Upload Resource</span>
+            </div>
+            <div class="nav-item" onclick="navigate('myuploads',this)" data-tip="My Uploads">
+                <div class="nav-icon"><i class="fas fa-folder-open"></i></div>
+                <span class="nav-label">My Uploads</span>
+                <span class="nav-badge" id="pendingBadge">2</span>
+            </div>
+            <div class="nav-section-label">Info</div>
+            <div class="nav-item" onclick="navigate('notices',this)" data-tip="Notice Board">
+                <div class="nav-icon"><i class="fas fa-bell"></i></div>
+                <span class="nav-label">Notice Board</span>
+            </div>
+            <div class="nav-item" onclick="navigate('profile',this)" data-tip="My Profile">
+                <div class="nav-icon"><i class="fas fa-user-circle"></i></div>
+                <span class="nav-label">My Profile</span>
+            </div>
+        </nav>
+        <div class="sidebar-bottom">
+            <button class="sidebar-toggle-btn" onclick="toggleSidebar()">
+                <i class="fas fa-chevron-left" id="sidebarToggleIcon"></i>
+                <span class="toggle-label">Collapse</span>
+            </button>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="toggle-label">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- TOPBAR -->
+    <header class="topbar" id="topbar">
+        <button class="icon-btn mobile-menu-btn" onclick="openMobileSidebar()"><i class="fas fa-bars"></i></button>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+        <div class="topbar-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search resources..." id="globalSearch" onkeyup="handleGlobalSearch(event)">
+        </div>
+        <div class="topbar-actions">
+            <button class="icon-btn" onclick="toggleTheme()" data-tip="Toggle Theme">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+            <button class="icon-btn" onclick="navigate('notices',document.querySelector('[onclick*=notices]'))"
+                data-tip="Notices">
+                <i class="fas fa-bell"></i>
+                <span class="notif-dot"></span>
+            </button>
+            <div class="user-profile" onclick="navigate('profile',document.querySelector('[onclick*=profile]'))">
+                <div class="user-avatar" id="userAvatar">ST</div>
+                <div class="user-info">
+                    <div class="user-name" id="userName">Student</div>
+                    <div class="user-role">Student</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main" id="main">
+
+        <!-- DASHBOARD PAGE -->
+        <div class="page active" id="page-dashboard">
+            <div class="page-header">
+                <h1 id="welcomeMsg">Welcome back! 👋</h1>
+                <p>Here's your academic resource hub overview.</p>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-card blue">
+                    <div class="stat-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <div class="stat-value" id="statUploads">0</div>
+                    <div class="stat-label">My Uploads</div>
+                </div>
+                <div class="stat-card teal">
+                    <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+                    <div class="stat-value" id="statResources">0</div>
+                    <div class="stat-label">Available Resources</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-value" id="statPending">0</div>
+                    <div class="stat-label">Pending Approval</div>
+                </div>
+                <div class="stat-card warn">
+                    <div class="stat-icon"><i class="fas fa-bullhorn"></i></div>
+                    <div class="stat-value" id="statNotices">0</div>
+                    <div class="stat-label">Active Notices</div>
+                </div>
+            </div>
+            <div class="dash-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">📚 Quick Access — Recent Resources</div>
+                        <span class="card-action"
+                            onclick="navigate('browse',document.querySelector('[onclick*=browse]'))">View All →</span>
+                    </div>
+                    <div class="resource-grid" id="recentResources">
+                        <div
+                            style="color:var(--text3);font-size:13px;grid-column:1/-1;text-align:center;padding:40px 0">
+                            Loading resources...</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">📢 Recent Notices</div>
+                        <span class="card-action"
+                            onclick="navigate('notices',document.querySelector('[onclick*=notices]'))">View All →</span>
+                    </div>
+                    <div class="notice-timeline" id="recentNotices">
+                        <div style="color:var(--text3);font-size:13px;text-align:center;padding:40px 0">Loading
+                            notices...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BROWSE RESOURCES PAGE -->
+        <div class="page" id="page-browse">
+            <div class="page-header">
+                <h1>Browse Resources 🔍</h1>
+                <p>Search and filter study materials uploaded by faculty and peers.</p>
+            </div>
+            <div class="table-controls">
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search by title or keyword..." id="resourceSearch"
+                        onkeyup="filterResources()">
+                </div>
+                <select class="filter-select" id="filterSemester" onchange="filterResources()">
+                    <option value="">All Semesters</option>
+                    <option value="1">1st Semester</option>
+                    <option value="2">2nd Semester</option>
+                    <option value="3">3rd Semester</option>
+                    <option value="4">4th Semester</option>
+                    <option value="5">5th Semester</option>
+                    <option value="6">6th Semester</option>
+                </select>
+                <select class="filter-select" id="filterSubject" onchange="filterResources()">
+                    <option value="">All Subjects</option>
+                </select>
+                <select class="filter-select" id="filterType" onchange="filterResources()">
+                    <option value="">All Types</option>
+                    <option value="PDF">PDF</option>
+                    <option value="PPT">PPT</option>
+                    <option value="DOC">DOC</option>
+                    <option value="IMAGE">Image</option>
+                </select>
+            </div>
+            <div class="resource-grid" id="browseGrid">
+                <div style="color:var(--text3);font-size:13px;grid-column:1/-1;text-align:center;padding:60px 0"><i
+                        class="fas fa-search"
+                        style="font-size:40px;opacity:0.3;display:block;margin-bottom:12px"></i>Use filters above to
+                    browse resources</div>
+            </div>
+        </div>
+
+        <!-- UPLOAD RESOURCE PAGE -->
+        <div class="page" id="page-upload">
+            <div class="page-header">
+                <h1>Upload Resource 📤</h1>
+                <p>Share your notes with fellow students. Uploads require faculty/admin approval before going live.</p>
+            </div>
+            <div class="card" style="max-width:700px">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label class="form-label">Resource Title *</label>
+                        <input class="form-input" id="uploadTitle" placeholder="e.g. BCA401 Unit 3 Notes">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Subject *</label>
+                        <select class="form-select" id="uploadSubject">
+                            <option value="">Select Subject</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">File Type</label>
+                        <select class="form-select" id="uploadType">
+                            <option value="PDF">PDF — Notes/Documents</option>
+                            <option value="PPT">PPT — Presentations</option>
+                            <option value="DOC">DOC — Assignments</option>
+                            <option value="IMAGE">Image — Whiteboard/Handwritten</option>
+                        </select>
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-textarea" id="uploadDesc"
+                            placeholder="Brief description of the resource..."></textarea>
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">File *</label>
+                        <div class="drop-zone" id="uploadDropZone" ondragover="handleDragOver(event)"
+                            ondragleave="handleDragLeave()" ondrop="handleDrop(event)"
+                            onclick="document.getElementById('fileInput').click()">
+                            <div class="drop-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="drop-title">Drag & Drop your file here</div>
+                            <div class="drop-sub">or click to browse files</div>
+                            <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+                                <span class="file-tag">PDF</span><span class="file-tag">PPT/PPTX</span>
+                                <span class="file-tag">DOC/DOCX</span><span class="file-tag">JPG/PNG</span>
+                            </div>
+                            <input type="file" id="fileInput" style="display:none"
+                                accept=".pdf,.ppt,.pptx,.doc,.docx,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
+                        </div>
+                        <div id="selectedFile"
+                            style="display:none;margin-top:12px;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px">
+                            <i class="fas fa-file" style="color:var(--accent);margin-right:8px"></i>
+                            <span id="selectedFileName"></span>
+                            <span style="color:var(--text3);margin-left:8px" id="selectedFileSize"></span>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top:20px;display:flex;gap:12px;align-items:center">
+                    <button class="btn btn-primary" onclick="submitUpload()"><i class="fas fa-upload"></i> Submit for
+                        Review</button>
+                    <span style="font-size:12px;color:var(--text3)"><i class="fas fa-info-circle"></i> Your upload will
+                        be reviewed by faculty before publishing.</span>
+                </div>
+                <div class="alert" id="uploadAlert"></div>
+            </div>
+        </div>
+
+        <!-- MY UPLOADS PAGE -->
+        <div class="page" id="page-myuploads">
+            <div class="page-header">
+                <h1>My Uploads 📁</h1>
+                <p>Track the status of your submitted resources.</p>
+            </div>
+            <div class="card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Subject</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="myUploadsTable">
+                        <tr>
+                            <td colspan="5" style="text-align:center;color:var(--text3);padding:40px">Loading your
+                                uploads...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- NOTICE BOARD PAGE -->
+        <div class="page" id="page-notices">
+            <div class="page-header">
+                <h1>Department Notice Board 📋</h1>
+                <p>Official circulars and announcements from your department.</p>
+            </div>
+            <div class="table-controls">
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search notices..." id="noticeSearch" onkeyup="filterNotices()">
+                </div>
+            </div>
+            <div id="noticeBoard" class="notice-timeline">
+                <div style="color:var(--text3);font-size:13px;text-align:center;padding:60px 0">Loading notices...</div>
+            </div>
+        </div>
+
+        <!-- PROFILE PAGE -->
+        <div class="page" id="page-profile">
+            <div class="page-header">
+                <h1>My Profile 👤</h1>
+                <p>Your account information and settings.</p>
+            </div>
+            <div class="profile-card" style="max-width:600px">
+                <div class="profile-avatar-lg" id="profileAvatar">ST</div>
+                <div class="profile-name" id="profileName">Student Name</div>
+                <div class="profile-detail" id="profileRole">Student</div>
+                <div class="profile-info-grid">
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Full Name</div>
+                        <div class="profile-info-value" id="profileFullName">—</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">USN</div>
+                        <div class="profile-info-value" id="profileUSN">—</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Email</div>
+                        <div class="profile-info-value" id="profileEmail">—</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label">Semester</div>
+                        <div class="profile-info-value" id="profileSemester">—</div>
+                    </div>
+                    <div class="profile-info-item" style="grid-column:1/-1">
+                        <div class="profile-info-label">Member Since</div>
+                        <div class="profile-info-value" id="profileJoined">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // ===== AUTH GUARD =====
+        const token = localStorage.getItem('edu_token');
+        const userData = {
+            name: localStorage.getItem('edu_name') || 'Student',
+            id: localStorage.getItem('edu_user_id'),
+            role: localStorage.getItem('edu_role') || 'STUDENT'
+        };
+        if (!token) { window.location.href = '/login'; }
+
+        // Populate user info from localStorage first (fast)
+        const initials = userData.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        document.getElementById('userAvatar').textContent = initials;
+        document.getElementById('userName').textContent = userData.name;
+        document.getElementById('welcomeMsg').textContent = `Welcome back, ${userData.name.split(' ')[0]}! 👋`;
+        document.getElementById('profileAvatar').textContent = initials;
+        document.getElementById('profileName').textContent = userData.name;
+        document.getElementById('profileFullName').textContent = userData.name;
+
+        // ===== API HELPER =====
+        const API_BASE = '';
+        const authHeaders = { 'Authorization': 'Bearer ' + token };
+
+        async function apiFetch(url, options = {}) {
+            try {
+                const res = await fetch(API_BASE + url, {
+                    ...options,
+                    headers: { ...authHeaders, ...(options.headers || {}) }
+                });
+                if (res.status === 401) { logout(); return null; }
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || `HTTP ${res.status}`);
+                }
+                return await res.json();
+            } catch (e) {
+                console.error('API error:', url, e);
+                return null;
+            }
+        }
+
+        // ===== DATA STORES (populated from API) =====
+        let allResources = [];
+        let myUploadsData = [];
+        let allNotices = [];
+        let allSubjects = [];
+
+        // ===== NAVIGATION =====
+        const pageTitles = { dashboard: 'Dashboard', browse: 'Browse Resources', upload: 'Upload Resource', myuploads: 'My Uploads', notices: 'Notice Board', profile: 'My Profile' };
+
+        function navigate(page, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            if (el) el.classList.add('active');
+            document.getElementById('topbarTitle').textContent = pageTitles[page] || 'Dashboard';
+            closeMobileSidebar();
+        }
+
+        // ===== SIDEBAR =====
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar'), tb = document.getElementById('topbar'), mn = document.getElementById('main'), ic = document.getElementById('sidebarToggleIcon');
+            sb.classList.toggle('collapsed'); tb.classList.toggle('collapsed'); mn.classList.toggle('collapsed');
+            ic.classList.toggle('fa-chevron-left'); ic.classList.toggle('fa-chevron-right');
+        }
+        function openMobileSidebar() { document.getElementById('sidebar').classList.add('mobile-open'); document.getElementById('mobileOverlay').classList.add('show') }
+        function closeMobileSidebar() { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('mobileOverlay').classList.remove('show') }
+
+        // ===== THEME =====
+        function toggleTheme() {
+            const html = document.documentElement, icon = document.getElementById('themeIcon');
+            if (html.getAttribute('data-theme') === 'dark') { html.setAttribute('data-theme', 'light'); icon.className = 'fas fa-sun' }
+            else { html.setAttribute('data-theme', 'dark'); icon.className = 'fas fa-moon' }
+        }
+
+        // ===== FORMAT HELPERS =====
+        function formatDate(isoStr) {
+            if (!isoStr) return '—';
+            return isoStr.split('T')[0];
+        }
+        function isRecent(isoStr) {
+            if (!isoStr) return false;
+            const diff = Date.now() - new Date(isoStr).getTime();
+            return diff < 3 * 24 * 60 * 60 * 1000; // within 3 days
+        }
+
+        // ===== RENDER HELPERS =====
+        const typeIcons = { PDF: 'fa-file-pdf', PPT: 'fa-file-powerpoint', DOC: 'fa-file-word', IMAGE: 'fa-file-image' };
+        const typeClass = { PDF: 'pdf', PPT: 'ppt', DOC: 'doc', IMAGE: 'image' };
+
+        function renderResourceCard(r) {
+            return `<div class="resource-card">
+    <div class="resource-icon-wrap ${typeClass[r.file_type] || 'pdf'}"><i class="fas ${typeIcons[r.file_type] || 'fa-file'}"></i></div>
+    <div class="resource-name">${r.title}</div>
+    <div class="resource-meta">${r.subject_code || ''} · Sem ${r.semester_number || '—'} · ${r.uploaded_by_name || ''}</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px"><i class="fas fa-calendar" style="margin-right:4px"></i>${formatDate(r.created_at)}</div>
+    <div class="resource-actions">
+      <button class="btn btn-primary btn-sm" style="flex:1;justify-content:center" onclick="downloadResource(${r.resource_id})"><i class="fas fa-download"></i> Download</button>
+    </div>
+  </div>`;
+        }
+
+        function emptyState(icon, text) {
+            return `<div style="color:var(--text3);font-size:13px;grid-column:1/-1;text-align:center;padding:60px 0"><i class="fas ${icon}" style="font-size:40px;opacity:0.3;display:block;margin-bottom:12px"></i>${text}</div>`;
+        }
+
+        // ===== FETCH & RENDER: PROFILE =====
+        async function loadProfile() {
+            const profile = await apiFetch('/api/student/profile');
+            if (!profile) return;
+
+            const n = profile.full_name || 'Student';
+            const ini = n.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+            document.getElementById('userAvatar').textContent = ini;
+            document.getElementById('userName').textContent = n;
+            document.getElementById('welcomeMsg').textContent = `Welcome back, ${n.split(' ')[0]}! 👋`;
+            document.getElementById('profileAvatar').textContent = ini;
+            document.getElementById('profileName').textContent = n;
+            document.getElementById('profileFullName').textContent = n;
+            document.getElementById('profileRole').textContent = profile.role || 'Student';
+            document.getElementById('profileEmail').textContent = profile.email || '—';
+            document.getElementById('profileUSN').textContent = profile.usn || '—';
+            document.getElementById('profileSemester').textContent = profile.semester_number ? `Semester ${profile.semester_number}` : '—';
+            document.getElementById('profileJoined').textContent = profile.created_at ? new Date(profile.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+        }
+
+        // ===== FETCH & RENDER: DASHBOARD STATS =====
+        async function loadDashboardStats() {
+            const stats = await apiFetch('/api/student/dashboard-stats');
+            if (!stats) return;
+
+            document.getElementById('statUploads').textContent = stats.my_uploads;
+            document.getElementById('statResources').textContent = stats.available_resources;
+            document.getElementById('statPending').textContent = stats.pending_uploads;
+            document.getElementById('statNotices').textContent = stats.active_notices;
+            document.getElementById('pendingBadge').textContent = stats.pending_uploads;
+        }
+
+        // ===== FETCH & RENDER: RESOURCES =====
+        async function loadResources() {
+            const resources = await apiFetch('/api/resources');
+            allResources = resources || [];
+            renderBrowse();
+            renderRecentResources();
+        }
+
+        function renderRecentResources() {
+            const rr = document.getElementById('recentResources');
+            if (!allResources.length) {
+                rr.innerHTML = emptyState('fa-book-open', 'No resources available yet.');
+                return;
+            }
+            rr.innerHTML = allResources.slice(0, 4).map(renderResourceCard).join('');
+        }
+
+        function renderBrowse() {
+            const grid = document.getElementById('browseGrid');
+            if (!allResources.length) {
+                grid.innerHTML = emptyState('fa-search', 'No approved resources found. Check back later!');
+                return;
+            }
+            grid.innerHTML = allResources.map(renderResourceCard).join('');
+        }
+
+        function filterResources() {
+            const q = (document.getElementById('resourceSearch').value || '').toLowerCase();
+            const sem = document.getElementById('filterSemester').value;
+            const subj = document.getElementById('filterSubject').value;
+            const type = document.getElementById('filterType').value;
+
+            let filtered = allResources.filter(r => {
+                if (q && !r.title.toLowerCase().includes(q) && !(r.subject_code || '').toLowerCase().includes(q) && !(r.subject_name || '').toLowerCase().includes(q)) return false;
+                if (sem && r.semester_number != sem) return false;
+                if (subj && r.subject_code !== subj) return false;
+                if (type && r.file_type !== type) return false;
+                return true;
+            });
+
+            const grid = document.getElementById('browseGrid');
+            if (!filtered.length) {
+                grid.innerHTML = emptyState('fa-inbox', 'No resources match your filters');
+                return;
+            }
+            grid.innerHTML = filtered.map(renderResourceCard).join('');
+        }
+
+        // ===== FETCH & RENDER: MY UPLOADS =====
+        async function loadMyUploads() {
+            const uploads = await apiFetch('/api/student/my-uploads');
+            myUploadsData = uploads || [];
+            renderMyUploads();
+        }
+
+        function renderMyUploads() {
+            const tb = document.getElementById('myUploadsTable');
+            if (!myUploadsData.length) {
+                tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:40px">You haven\'t uploaded any resources yet.</td></tr>';
+                return;
+            }
+            tb.innerHTML = myUploadsData.map(u => `<tr>
+    <td><strong>${u.title}</strong></td>
+    <td>${u.subject_code || ''}</td>
+    <td><span style="display:inline-flex;align-items:center;gap:6px"><i class="fas ${typeIcons[u.file_type] || 'fa-file'}" style="color:var(--accent)"></i>${u.file_type}</span></td>
+    <td style="color:var(--text2)">${formatDate(u.created_at)}</td>
+    <td><span class="status-badge ${u.status.toLowerCase()}">${u.status}</span></td>
+  </tr>`).join('');
+        }
+
+        // ===== FETCH & RENDER: NOTICES =====
+        async function loadNotices() {
+            const notices = await apiFetch('/api/notices');
+            allNotices = notices || [];
+            renderRecentNotices();
+            renderNoticeBoard();
+        }
+
+        function renderRecentNotices() {
+            const rn = document.getElementById('recentNotices');
+            const dots = ['warn', 'blue', 'teal'];
+            if (!allNotices.length) {
+                rn.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:40px 0">No notices yet.</div>';
+                return;
+            }
+            rn.innerHTML = allNotices.slice(0, 4).map((n, i) => `
+    <div class="notice-item">
+      <div class="notice-dot ${dots[i % 3]}"></div>
+      <div class="notice-content">
+        <div class="notice-title">${n.title}</div>
+        <div class="notice-meta">${formatDate(n.created_at)} · ${n.posted_by || ''}</div>
+      </div>
+      ${isRecent(n.created_at) ? '<span class="notice-badge badge-new">New</span>' : ''}
+    </div>`).join('');
+        }
+
+        function renderNoticeBoard() {
+            const nb = document.getElementById('noticeBoard');
+            const dots = ['warn', 'blue', 'teal'];
+            if (!allNotices.length) {
+                nb.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:60px 0">No notices posted yet.</div>';
+                return;
+            }
+            nb.innerHTML = allNotices.map((n, i) => `
+    <div class="notice-item" style="flex-direction:column;gap:8px;padding:20px">
+      <div style="display:flex;align-items:center;gap:12px;width:100%">
+        <div class="notice-dot ${dots[i % 3]}"></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700;margin-bottom:2px">${n.title}</div>
+          <div style="font-size:11px;color:var(--text3)">${formatDate(n.created_at)} · ${n.posted_by || ''}</div>
+        </div>
+        ${isRecent(n.created_at) ? '<span class="notice-badge badge-new" style="font-size:11px;padding:3px 10px">🆕 New</span>' : ''}
+      </div>
+      <div style="font-size:13px;color:var(--text2);padding-left:22px">${n.content}</div>
+    </div>`).join('');
+        }
+
+        function filterNotices() {
+            const q = (document.getElementById('noticeSearch').value || '').toLowerCase();
+            const filtered = allNotices.filter(n => n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q));
+            const nb = document.getElementById('noticeBoard');
+            const dots = ['warn', 'blue', 'teal'];
+            if (!filtered.length) {
+                nb.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:60px 0">No notices match your search.</div>';
+                return;
+            }
+            nb.innerHTML = filtered.map((n, i) => `
+    <div class="notice-item" style="flex-direction:column;gap:8px;padding:20px">
+      <div style="display:flex;align-items:center;gap:12px;width:100%">
+        <div class="notice-dot ${dots[i % 3]}"></div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700;margin-bottom:2px">${n.title}</div>
+          <div style="font-size:11px;color:var(--text3)">${formatDate(n.created_at)} · ${n.posted_by || ''}</div>
+        </div>
+        ${isRecent(n.created_at) ? '<span class="notice-badge badge-new" style="font-size:11px;padding:3px 10px">🆕 New</span>' : ''}
+      </div>
+      <div style="font-size:13px;color:var(--text2);padding-left:22px">${n.content}</div>
+    </div>`).join('');
+        }
+
+        // ===== FETCH & RENDER: SUBJECTS =====
+        async function loadSubjects() {
+            const subjects = await apiFetch('/api/subjects');
+            allSubjects = subjects || [];
+            populateSubjectDropdowns();
+        }
+
+        function populateSubjectDropdowns() {
+            const filterSel = document.getElementById('filterSubject');
+            const uploadSel = document.getElementById('uploadSubject');
+
+            // Reset
+            filterSel.innerHTML = '<option value="">All Subjects</option>';
+            uploadSel.innerHTML = '<option value="">Select Subject</option>';
+
+            allSubjects.forEach(s => {
+                filterSel.innerHTML += `<option value="${s.subject_code}">${s.subject_code} — ${s.subject_name}</option>`;
+                uploadSel.innerHTML += `<option value="${s.subject_id}">${s.subject_code} — ${s.subject_name}</option>`;
+            });
+        }
+
+        // ===== UPLOAD =====
+        let selectedFile = null;
+        function handleDragOver(e) { e.preventDefault(); document.getElementById('uploadDropZone').classList.add('drag-over') }
+        function handleDragLeave() { document.getElementById('uploadDropZone').classList.remove('drag-over') }
+        function handleDrop(e) { e.preventDefault(); document.getElementById('uploadDropZone').classList.remove('drag-over'); if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]) }
+        function handleFileSelect(e) { if (e.target.files.length) setFile(e.target.files[0]) }
+
+        function setFile(file) {
+            const allowed = ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!allowed.includes(ext)) { showUploadAlert('error', 'Invalid file type. Allowed: PDF, PPT, DOC, JPG, PNG'); return }
+            selectedFile = file;
+            document.getElementById('selectedFile').style.display = 'block';
+            document.getElementById('selectedFileName').textContent = file.name;
+            document.getElementById('selectedFileSize').textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+        }
+
+        async function submitUpload() {
+            const title = document.getElementById('uploadTitle').value.trim();
+            const subjectId = document.getElementById('uploadSubject').value;
+            const fileType = document.getElementById('uploadType').value;
+            const desc = document.getElementById('uploadDesc').value.trim();
+
+            if (!title) { showUploadAlert('error', 'Please enter a resource title.'); return }
+            if (!subjectId) { showUploadAlert('error', 'Please select a subject.'); return }
+            if (!selectedFile) { showUploadAlert('error', 'Please select a file to upload.'); return }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('subject_id', subjectId);
+            formData.append('file_type', fileType);
+            formData.append('description', desc);
+            formData.append('file', selectedFile);
+
+            try {
+                const res = await fetch('/api/student/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showUploadAlert('error', data.detail || 'Upload failed.');
+                    return;
+                }
+
+                showUploadAlert('success', data.message || 'Resource uploaded successfully!');
+
+                // Reset form
+                document.getElementById('uploadTitle').value = '';
+                document.getElementById('uploadSubject').value = '';
+                document.getElementById('uploadDesc').value = '';
+                selectedFile = null;
+                document.getElementById('selectedFile').style.display = 'none';
+                document.getElementById('fileInput').value = '';
+
+                // Refresh data
+                loadMyUploads();
+                loadDashboardStats();
+            } catch (e) {
+                showUploadAlert('error', 'Upload failed. Please try again.');
+                console.error('Upload error:', e);
+            }
+        }
+
+        function showUploadAlert(type, msg) {
+            const el = document.getElementById('uploadAlert');
+            el.className = 'alert ' + type + ' show';
+            el.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+            setTimeout(() => { el.classList.remove('show') }, 5000);
+        }
+
+        // ===== DOWNLOAD =====
+        function downloadResource(resourceId) {
+            window.open(`/api/resources/${resourceId}/download`, '_blank');
+        }
+
+        // ===== GLOBAL SEARCH =====
+        function handleGlobalSearch(e) {
+            if (e.key === 'Enter') {
+                navigate('browse', document.querySelector('[onclick*=browse]'));
+                document.getElementById('resourceSearch').value = document.getElementById('globalSearch').value;
+                filterResources();
+            }
+        }
+
+        // ===== LOGOUT =====
+        function logout() {
+            localStorage.removeItem('edu_token'); localStorage.removeItem('edu_name');
+            localStorage.removeItem('edu_user_id'); localStorage.removeItem('edu_role');
+            window.location.href = '/login';
+        }
+
+        // ===== INIT — Load all data from API =====
+        async function initDashboard() {
+            await Promise.all([
+                loadProfile(),
+                loadDashboardStats(),
+                loadResources(),
+                loadMyUploads(),
+                loadNotices(),
+                loadSubjects()
+            ]);
+        }
+        initDashboard();
+    </script>
+</body>
+
+</html>

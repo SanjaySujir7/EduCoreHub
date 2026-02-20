@@ -588,6 +588,587 @@ def download_resource(resource_id: int):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  FACULTY DASHBOARD API ENDPOINTS
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── GET /api/faculty/profile ─────────────────────────────────────────────────
+@app.get("/api/faculty/profile")
+def get_faculty_profile(request: Request):
+    """Return the logged-in faculty's full profile."""
+    user_data = get_current_user(request)
+    user_id = int(user_data["sub"])
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT u.user_id, u.full_name, u.email, u.role, u.created_at,
+                   f.qualification, f.specialization, f.experience_years
+            FROM users u
+            LEFT JOIN faculty f ON u.user_id = f.user_id
+            WHERE u.user_id = %s
+        """, (user_id,))
+        profile = cursor.fetchone()
+        if not profile:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        if profile.get('created_at'):
+            profile['created_at'] = profile['created_at'].isoformat()
+
+        return profile
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── GET /api/faculty/dashboard-stats ─────────────────────────────────────────
+@app.get("/api/faculty/dashboard-stats")
+def get_faculty_dashboard_stats(request: Request):
+    """Return stat card counts for the faculty dashboard."""
+    user_data = get_current_user(request)
+    user_id = int(user_data["sub"])
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Total approved resources
+        cursor.execute("SELECT COUNT(*) as cnt FROM resources WHERE status = 'APPROVED'")
+        total_resources = cursor.fetchone()['cnt']
+
+        # Pending reviews (student submissions awaiting approval)
+        cursor.execute("SELECT COUNT(*) as cnt FROM resources WHERE status = 'PENDING'")
+        pending_reviews = cursor.fetchone()['cnt']
+
+        # My uploads
+        cursor.execute("SELECT COUNT(*) as cnt FROM resources WHERE uploaded_by = %s", (user_id,))
+        my_uploads = cursor.fetchone()['cnt']
+
+        # Total notices
+        cursor.execute("SELECT COUNT(*) as cnt FROM notices")
+        total_notices = cursor.fetchone()['cnt']
+
+        # Total subjects
+        cursor.execute("SELECT COUNT(*) as cnt FROM subjects")
+        total_subjects = cursor.fetchone()['cnt']
+
+        # Total students
+        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE role = 'STUDENT'")
+        total_students = cursor.fetchone()['cnt']
+
+        return {
+            "total_resources": total_resources,
+            "pending_reviews": pending_reviews,
+            "my_uploads": my_uploads,
+            "total_notices": total_notices,
+            "total_subjects": total_subjects,
+            "total_students": total_students
+        }
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── POST /api/faculty/upload ─────────────────────────────────────────────────
+@app.post("/api/faculty/upload")
+async def faculty_upload_resource(
+    request: Request,
+    title: str = Form(...),
+    subject_id: int = Form(...),
+    file_type: str = Form(...),
+    description: str = Form(""),
+    file: UploadFile = File(...)
+):
+    """Faculty upload — auto-APPROVED."""
+    user_data = get_current_user(request)
+    user_id = int(user_data["sub"])
+
+    allowed_exts = {'.pdf', '.ppt', '.pptx', '.doc', '.docx', '.jpg', '.jpeg', '.png'}
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in allowed_exts:
+        raise HTTPException(status_code=400, detail="Invalid file type.")
+
+    unique_name = f"{uuid.uuid4().hex}{ext}"
+    file_path = os.path.join(UPLOAD_DIR, unique_name)
+
+    with open(file_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
+
+    conn = get_db_connection()
+    if not conn:
+        os.remove(file_path)
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            INSERT INTO resources (title, description, file_path, file_type, uploaded_by, subject_id, status)
+            VALUES (%s, %s, %s, %s, %s, %s, 'APPROVED')
+        """, (title, description, unique_name, file_type, user_id, subject_id))
+        conn.commit()
+        return {"message": "Resource uploaded and published successfully.", "resource_id": cursor.lastrowid}
+    except Error as e:
+        conn.rollback()
+        os.remove(file_path)
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── GET /api/faculty/pending-reviews ─────────────────────────────────────────
+@app.get("/api/faculty/pending-reviews")
+def get_pending_reviews(request: Request):
+    """Return all PENDING resources for faculty review."""
+    get_current_user(request)  # auth check
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT r.resource_id, r.title, r.description, r.file_path, r.file_type,
+                   r.status, r.created_at,
+                   u.full_name AS uploaded_by_name, u.role AS uploader_role,
+                   sub.subject_code, sub.subject_name,
+                   sem.semester_number
+            FROM resources r
+            JOIN users u ON r.uploaded_by = u.user_id
+            JOIN subjects sub ON r.subject_id = sub.subject_id
+            JOIN semesters sem ON sub.semester_id = sem.semester_id
+            WHERE r.status = 'PENDING'
+            ORDER BY r.created_at DESC
+        """)
+        resources = cursor.fetchall()
+
+        for r in resources:
+            if r.get('created_at'):
+                r['created_at'] = r['created_at'].isoformat()
+
+        return resources
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── PUT /api/faculty/review/{id} ─────────────────────────────────────────────
+class ReviewAction(BaseModel):
+    action: str  # "APPROVED" or "REJECTED"
+
+@app.put("/api/faculty/review/{resource_id}")
+def review_resource(resource_id: int, body: ReviewAction, request: Request):
+    """Approve or reject a pending resource."""
+    get_current_user(request)  # auth check
+
+    if body.action not in ("APPROVED", "REJECTED"):
+        raise HTTPException(status_code=400, detail="Action must be 'APPROVED' or 'REJECTED'.")
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT resource_id, status FROM resources WHERE resource_id = %s", (resource_id,))
+        resource = cursor.fetchone()
+        if not resource:
+            raise HTTPException(status_code=404, detail="Resource not found")
+
+        cursor.execute("UPDATE resources SET status = %s WHERE resource_id = %s", (body.action, resource_id))
+        conn.commit()
+        return {"message": f"Resource {body.action.lower()} successfully."}
+    except Error as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── POST /api/faculty/notice ─────────────────────────────────────────────────
+class NoticeCreate(BaseModel):
+    title: str
+    content: str
+
+@app.post("/api/faculty/notice")
+def create_notice(body: NoticeCreate, request: Request):
+    """Create a new department notice."""
+    user_data = get_current_user(request)
+    user_id = int(user_data["sub"])
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "INSERT INTO notices (title, content, posted_by) VALUES (%s, %s, %s)",
+            (body.title, body.content, user_id)
+        )
+        conn.commit()
+        return {"message": "Notice posted successfully.", "notice_id": cursor.lastrowid}
+    except Error as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── POST /api/faculty/subject ────────────────────────────────────────────────
+class SubjectCreate(BaseModel):
+    subject_code: str
+    subject_name: str
+    semester_number: int
+
+@app.post("/api/faculty/subject")
+def create_subject(body: SubjectCreate, request: Request):
+    """Add a new subject to a semester."""
+    get_current_user(request)  # auth check
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Get or create semester
+        cursor.execute("SELECT semester_id FROM semesters WHERE semester_number = %s", (body.semester_number,))
+        sem_row = cursor.fetchone()
+        if not sem_row:
+            cursor.execute("INSERT INTO semesters (semester_number) VALUES (%s)", (body.semester_number,))
+            semester_id = cursor.lastrowid
+        else:
+            semester_id = sem_row['semester_id']
+
+        # Check duplicate
+        cursor.execute("SELECT subject_id FROM subjects WHERE subject_code = %s", (body.subject_code,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="Subject code already exists.")
+
+        cursor.execute(
+            "INSERT INTO subjects (subject_code, subject_name, semester_id) VALUES (%s, %s, %s)",
+            (body.subject_code, body.subject_name, semester_id)
+        )
+        conn.commit()
+        return {"message": "Subject added successfully.", "subject_id": cursor.lastrowid}
+    except HTTPException:
+        conn.rollback()
+        raise
+    except Error as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── DELETE /api/faculty/notice/{id} ──────────────────────────────────────────
+@app.delete("/api/faculty/notice/{notice_id}")
+def delete_notice(notice_id: int, request: Request):
+    """Delete a notice posted by this faculty."""
+    user_data = get_current_user(request)
+    user_id = int(user_data["sub"])
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT notice_id, posted_by FROM notices WHERE notice_id = %s", (notice_id,))
+        notice = cursor.fetchone()
+        if not notice:
+            raise HTTPException(status_code=404, detail="Notice not found")
+        if notice['posted_by'] != user_id:
+            raise HTTPException(status_code=403, detail="You can only delete your own notices.")
+
+        cursor.execute("DELETE FROM notices WHERE notice_id = %s", (notice_id,))
+        conn.commit()
+        return {"message": "Notice deleted successfully."}
+    except HTTPException:
+        raise
+    except Error as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  ADMIN DASHBOARD API ENDPOINTS
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── GET /api/admin/dashboard-stats ───────────────────────────────────────────
+@app.get("/api/admin/dashboard-stats")
+def admin_dashboard_stats(request: Request):
+    """Return stat card counts for the admin dashboard."""
+    get_current_user(request)
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE role = 'STUDENT'")
+        total_students = cursor.fetchone()['cnt']
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE role = 'FACULTY'")
+        total_faculty = cursor.fetchone()['cnt']
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM resources WHERE status = 'APPROVED'")
+        total_resources = cursor.fetchone()['cnt']
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM resources WHERE status = 'PENDING'")
+        pending_uploads = cursor.fetchone()['cnt']
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM notices")
+        total_notices = cursor.fetchone()['cnt']
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM subjects")
+        total_subjects = cursor.fetchone()['cnt']
+
+        return {
+            "total_students": total_students,
+            "total_faculty": total_faculty,
+            "total_resources": total_resources,
+            "pending_uploads": pending_uploads,
+            "total_notices": total_notices,
+            "total_subjects": total_subjects,
+        }
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── GET /api/admin/users ─────────────────────────────────────────────────────
+@app.get("/api/admin/users")
+def admin_list_users(
+    request: Request,
+    role: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
+):
+    """List all users with optional role filter and search."""
+    get_current_user(request)
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        sql = """
+            SELECT u.user_id, u.full_name, u.email, u.role, u.created_at,
+                   s.usn,
+                   f.qualification, f.specialization
+            FROM users u
+            LEFT JOIN students s ON u.user_id = s.user_id
+            LEFT JOIN faculty f ON u.user_id = f.user_id
+            WHERE 1=1
+        """
+        params = []
+
+        if role:
+            sql += " AND u.role = %s"
+            params.append(role.upper())
+
+        if q:
+            sql += " AND (u.full_name LIKE %s OR u.email LIKE %s)"
+            like = f"%{q}%"
+            params.extend([like, like])
+
+        sql += " ORDER BY u.created_at DESC"
+
+        cursor.execute(sql, params)
+        users = cursor.fetchall()
+
+        for u in users:
+            if u.get('created_at'):
+                u['created_at'] = u['created_at'].isoformat()
+
+        return users
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── POST /api/admin/user ─────────────────────────────────────────────────────
+class AdminCreateUser(BaseModel):
+    full_name: str
+    email: str
+    password: str
+    role: str  # STUDENT, FACULTY, ADMIN
+    usn: Optional[str] = None
+    semester_number: Optional[int] = None
+
+@app.post("/api/admin/user")
+def admin_create_user(body: AdminCreateUser, request: Request):
+    """Admin creates a user of any role."""
+    get_current_user(request)
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE email = %s", (body.email,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=409, detail="Email already registered.")
+
+        hashed = hash_password(body.password)
+        role = body.role.upper()
+        if role not in ("STUDENT", "FACULTY", "ADMIN"):
+            raise HTTPException(status_code=400, detail="Invalid role.")
+
+        cursor.execute(
+            "INSERT INTO users (full_name, email, password_hash, role) VALUES (%s, %s, %s, %s)",
+            (body.full_name, body.email, hashed, role)
+        )
+        user_id = cursor.lastrowid
+
+        if role == "STUDENT" and body.usn:
+            sem_id = None
+            if body.semester_number:
+                cursor.execute("SELECT semester_id FROM semesters WHERE semester_number = %s", (body.semester_number,))
+                row = cursor.fetchone()
+                if row:
+                    sem_id = row['semester_id']
+                else:
+                    cursor.execute("INSERT INTO semesters (semester_number) VALUES (%s)", (body.semester_number,))
+                    sem_id = cursor.lastrowid
+            if sem_id:
+                cursor.execute("INSERT INTO students (user_id, usn, semester_id) VALUES (%s, %s, %s)", (user_id, body.usn, sem_id))
+
+        if role == "FACULTY":
+            cursor.execute("INSERT INTO faculty (user_id) VALUES (%s)", (user_id,))
+
+        conn.commit()
+        return {"message": f"User '{body.full_name}' created as {role}.", "user_id": user_id}
+    except HTTPException:
+        conn.rollback()
+        raise
+    except Error as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── DELETE /api/admin/user/{id} ──────────────────────────────────────────────
+@app.delete("/api/admin/user/{user_id}")
+def admin_delete_user(user_id: int, request: Request):
+    """Delete a user (cascades to student/faculty tables)."""
+    get_current_user(request)
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (user_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="User not found")
+
+        cursor.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
+        conn.commit()
+        return {"message": "User deleted successfully."}
+    except HTTPException:
+        raise
+    except Error as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── GET /api/admin/all-resources ─────────────────────────────────────────────
+@app.get("/api/admin/all-resources")
+def admin_all_resources(request: Request):
+    """Return all resources regardless of status."""
+    get_current_user(request)
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT r.resource_id, r.title, r.description, r.file_path, r.file_type,
+                   r.status, r.created_at,
+                   u.full_name AS uploaded_by_name,
+                   sub.subject_code, sub.subject_name,
+                   sem.semester_number
+            FROM resources r
+            JOIN users u ON r.uploaded_by = u.user_id
+            JOIN subjects sub ON r.subject_id = sub.subject_id
+            JOIN semesters sem ON sub.semester_id = sem.semester_id
+            ORDER BY r.created_at DESC
+        """)
+        resources = cursor.fetchall()
+
+        for r in resources:
+            if r.get('created_at'):
+                r['created_at'] = r['created_at'].isoformat()
+
+        return resources
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── DELETE /api/admin/resource/{id} ──────────────────────────────────────────
+@app.delete("/api/admin/resource/{resource_id}")
+def admin_delete_resource(resource_id: int, request: Request):
+    """Delete a resource and its file."""
+    get_current_user(request)
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT resource_id, file_path FROM resources WHERE resource_id = %s", (resource_id,))
+        resource = cursor.fetchone()
+        if not resource:
+            raise HTTPException(status_code=404, detail="Resource not found")
+
+        cursor.execute("DELETE FROM resources WHERE resource_id = %s", (resource_id,))
+        conn.commit()
+
+        # Remove file
+        fp = os.path.join(UPLOAD_DIR, resource['file_path'])
+        if os.path.exists(fp):
+            os.remove(fp)
+
+        return {"message": "Resource deleted successfully."}
+    except HTTPException:
+        raise
+    except Error as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  ENTRY POINT
 # ══════════════════════════════════════════════════════════════════════════════
 

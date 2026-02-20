@@ -680,7 +680,7 @@
             </ul>
 
             <div class="login-link-bottom">
-                Already have an account? <a href="login.html">Sign in here →</a>
+                Already have an account? <a href="/login">Sign in here →</a>
             </div>
         </div>
 
@@ -764,16 +764,7 @@
 
 
 
-                    <!-- Phone (common) -->
-                    <div class="field-group">
-                        <label for="phone">Phone Number</label>
-                        <div class="input-wrap">
-                            <span class="input-icon">📞</span>
-                            <input type="tel" id="phone" name="phone" placeholder="+91 98765 43210" maxlength="15"
-                                autocomplete="tel" />
-                        </div>
-                        <span class="field-error" id="err-phone">⚠ Enter a valid 10-digit phone number.</span>
-                    </div>
+
 
                     <!-- Password -->
                     <div class="form-row">
@@ -826,7 +817,7 @@
             </form>
 
             <div class="login-redirect">
-                Already registered? <a href="login.html">Sign in to your account</a>
+                Already registered? <a href="/login">Sign in to your account</a>
             </div>
         </div>
     </div>
@@ -893,10 +884,6 @@
             return /^[A-Z0-9]{6,12}$/i.test(u);
         }
 
-        function validatePhone(p) {
-            const cleaned = p.replace(/[\s\-\(\)\+]/g, '');
-            return cleaned === '' || /^[0-9]{10}$/.test(cleaned);
-        }
 
         // ── Form Submission ─────────────────────────────────────────────────────────
         document.getElementById('registerForm').addEventListener('submit', function (e) {
@@ -919,9 +906,6 @@
             const sem = document.getElementById('semester').value;
             if (!sem) { showError('semester', 'err-semester'); valid = false; }
 
-            // Phone (optional but validate format if given)
-            const phone = document.getElementById('phone').value.trim();
-            if (phone && !validatePhone(phone)) { showError('phone', 'err-phone'); valid = false; }
 
             // Password
             const pw = document.getElementById('password').value;
@@ -957,7 +941,6 @@
                 email: email,
                 usn: usn,
                 semester_number: semesterNumber,
-                phone: phone || null,
                 password: pw,
             };
 
@@ -977,7 +960,7 @@
                         document.getElementById('strengthMeter').classList.remove('visible');
                         btn.innerHTML = 'Create Account <span class="btn-arrow">→</span>';
                         btn.disabled = false;
-                        setTimeout(() => { window.location.href = 'login.html'; }, 2500);
+                        setTimeout(() => { window.location.href = '/login'; }, 2500);
                     } else {
                         // Server error (409 duplicate, 422 validation, 500, etc.)
                         const msg = data.detail || 'Registration failed. Please try again.';
