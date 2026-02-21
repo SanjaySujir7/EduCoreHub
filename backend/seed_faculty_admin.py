@@ -29,28 +29,28 @@ DB_CONFIG = {
 
 FACULTY_DATA = [
     {
-        "full_name": "Dr. Ramesh Kumar",
-        "email": "ramesh.kumar@educorehub.com",
+        "full_name": "Praveen Kulakarni",
+        "email": "praveen.kulakarni@educorehub.com",
         "password": "Faculty@123",
-        "qualification": "Ph.D. Computer Science",
-        "specialization": "Artificial Intelligence",
-        "experience_years": 12,
-    },
-    {
-        "full_name": "Prof. Sneha Patil",
-        "email": "sneha.patil@educorehub.com",
-        "password": "Faculty@123",
-        "qualification": "M.Tech Information Science",
-        "specialization": "Data Science",
-        "experience_years": 8,
-    },
-    {
-        "full_name": "Dr. Anil Sharma",
-        "email": "anil.sharma@educorehub.com",
-        "password": "Faculty@123",
-        "qualification": "Ph.D. Software Engineering",
-        "specialization": "Cloud Computing",
+        "qualification": "Mca",
+        "specialization": "Java",
         "experience_years": 15,
+    },
+    {
+        "full_name": "Akshatha Marathe",
+        "email": "akshatha.marathe@educorehub.com",
+        "password": "Faculty@123",
+        "qualification": "MSE",
+        "specialization": "Digital Marketing",
+        "experience_years": 15,
+    },
+    {
+        "full_name": "Rahul",
+        "email": "rahul@educorehub.com",
+        "password": "Faculty@123",
+        "qualification": "MCom",
+        "specialization": "Finance",
+        "experience_years": 12,
     },
 ]
 
@@ -58,13 +58,8 @@ ADMIN_DATA = [
     {
         "full_name": "Sanjay Sujir",
         "email": "admin@educorehub.com",
-        "password": "Admin@123",
-    },
-    {
-        "full_name": "vijeth",
-        "email": "vijeth@educorehub.com",
-        "password": "Admin@123",
-    },
+        "password": "admin@123",
+    }
 ]
 
 

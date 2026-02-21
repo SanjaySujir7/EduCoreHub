@@ -1393,12 +1393,16 @@
 
         // ===== LOAD SUBJECTS =====
         async function loadSubjects() {
-            const s = await apiFetch('/api/subjects'); allSubjects = s || [];
-            const sel = document.getElementById('uploadSubject'); sel.innerHTML = '<option value="">Select Subject</option>';
-            allSubjects.forEach(x => { sel.innerHTML += `<option value="${x.subject_id}">${x.subject_code} — ${x.subject_name}</option>`; });
+            // My subjects (created by this faculty)
+            const mine = await apiFetch('/api/faculty/my-subjects'); allSubjects = mine || [];
             const list = document.getElementById('subjectsList');
-            if (!allSubjects.length) { list.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:40px 0">No subjects yet. Add one!</div>'; return; }
-            list.innerHTML = allSubjects.map(s => `<div class="subject-chip"><span class="code">${s.subject_code}</span>${s.subject_name}<span class="sem">Sem ${s.semester_number}</span></div>`).join('');
+            if (!allSubjects.length) { list.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:40px 0">No subjects yet. Add one!</div>'; }
+            else { list.innerHTML = allSubjects.map(s => `<div class="subject-chip"><span class="code">${s.subject_code}</span>${s.subject_name}<span class="sem">Sem ${s.semester_number}</span></div>`).join(''); }
+
+            // All subjects (for upload dropdown — faculty can upload to any subject)
+            const all = await apiFetch('/api/subjects'); const allSubs = all || [];
+            const sel = document.getElementById('uploadSubject'); sel.innerHTML = '<option value="">Select Subject</option>';
+            allSubs.forEach(x => { sel.innerHTML += `<option value="${x.subject_id}">${x.subject_code} — ${x.subject_name}</option>`; });
         }
 
         // ===== LOAD NOTICES =====
@@ -1415,15 +1419,37 @@
         }
 
         async function deleteNotice(nid, btn) {
-            if (!confirm('Delete this notice?')) return;
+            if (!confirm('Are you sure you want to permanently delete this notice?')) return;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             const r = await fetch(`/api/faculty/notice/${nid}`, { method: 'DELETE', headers: authHeaders });
             if (r.ok) {
                 const item = btn.closest('.notice-item');
+                item.style.transition = 'all 0.4s ease';
+                item.style.transform = 'translateX(60px)';
                 item.style.opacity = '0';
-                item.style.transition = 'opacity .3s';
-                setTimeout(() => item.remove(), 300);
+                item.style.maxHeight = item.scrollHeight + 'px';
+                setTimeout(() => {
+                    item.style.maxHeight = '0';
+                    item.style.padding = '0';
+                    item.style.margin = '0';
+                    item.style.border = 'none';
+                }, 300);
+                setTimeout(() => item.remove(), 600);
+                // Show a toast
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed;bottom:30px;right:30px;background:var(--success);color:#fff;padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px;animation:fadeInUp .3s ease';
+                toast.innerHTML = '<i class="fas fa-check-circle"></i> Notice deleted successfully';
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity .3s'; }, 2500);
+                setTimeout(() => toast.remove(), 3000);
+                // Refresh data
+                allNotices = allNotices.filter(n => n.notice_id !== nid);
+                renderDashNotices();
                 loadStats();
             } else {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash"></i>';
                 const e = await r.json().catch(() => ({}));
                 alert(e.detail || 'Failed to delete notice.');
             }

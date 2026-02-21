@@ -73,9 +73,13 @@ try:
         subject_code VARCHAR(20) UNIQUE NOT NULL,
         subject_name VARCHAR(100) NOT NULL,
         semester_id INT NOT NULL,
+        created_by INT,
         FOREIGN KEY (semester_id)
             REFERENCES semesters(semester_id)
-            ON DELETE CASCADE
+            ON DELETE CASCADE,
+        FOREIGN KEY (created_by)
+            REFERENCES users(user_id)
+            ON DELETE SET NULL
     ) ENGINE=InnoDB;
     """)
     print("✅ Subjects table created")

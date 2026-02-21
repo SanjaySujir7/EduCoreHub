@@ -852,7 +852,7 @@ class SubjectCreate(BaseModel):
 @app.post("/api/faculty/subject")
 def create_subject(body: SubjectCreate, request: Request):
     """Add a new subject to a semester."""
-    get_current_user(request)  # auth check
+    user = get_current_user(request)  # auth check
 
     conn = get_db_connection()
     if not conn:
@@ -875,8 +875,8 @@ def create_subject(body: SubjectCreate, request: Request):
             raise HTTPException(status_code=409, detail="Subject code already exists.")
 
         cursor.execute(
-            "INSERT INTO subjects (subject_code, subject_name, semester_id) VALUES (%s, %s, %s)",
-            (body.subject_code, body.subject_name, semester_id)
+            "INSERT INTO subjects (subject_code, subject_name, semester_id, created_by) VALUES (%s, %s, %s, %s)",
+            (body.subject_code, body.subject_name, semester_id, int(user['sub']))
         )
         conn.commit()
         return {"message": "Subject added successfully.", "subject_id": cursor.lastrowid}
@@ -886,6 +886,32 @@ def create_subject(body: SubjectCreate, request: Request):
     except Error as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ── GET /api/faculty/my-subjects ─────────────────────────────────────────────
+@app.get("/api/faculty/my-subjects")
+def get_my_subjects(request: Request):
+    """Return subjects created by the logged-in faculty."""
+    user = get_current_user(request)
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT sub.subject_id, sub.subject_code, sub.subject_name,
+                   sem.semester_number
+            FROM subjects sub
+            JOIN semesters sem ON sub.semester_id = sem.semester_id
+            WHERE sub.created_by = %s
+            ORDER BY sem.semester_number, sub.subject_code
+        """, (int(user['sub']),))
+        return cursor.fetchall()
     finally:
         cursor.close()
         conn.close()

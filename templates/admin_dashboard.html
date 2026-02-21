@@ -705,6 +705,10 @@
       .dash-grid {
         grid-template-columns: 1fr;
       }
+
+      .dash-3col {
+        grid-template-columns: 1fr !important;
+      }
     }
 
     .card {
@@ -2154,11 +2158,12 @@
         </div>
       </div>
 
-      <div class="dash-grid">
+      <div style="display:grid;grid-template-columns:1fr 1fr 340px;gap:20px;" class="dash-3col">
+        <!-- ENROLLMENT ACTIVITY CHART -->
         <div class="card">
           <div class="card-header">
-            <div class="card-title">Enrollment Activity</div>
-            <span class="card-action">View Report →</span>
+            <div class="card-title">📊 Enrollment Activity</div>
+            <span class="card-action">This Semester</span>
           </div>
           <div class="mini-stats">
             <div class="mini-stat"><i class="fas fa-circle"
@@ -2172,18 +2177,34 @@
             <!-- Dynamic bars rendered by JS -->
           </div>
           <div style="display:flex;justify-content:space-between;margin-top:8px;">
-            <span style="font-size:11px;color:var(--text3)">Jan</span>
-            <span style="font-size:11px;color:var(--text3)">Feb</span>
-            <span style="font-size:11px;color:var(--text3)">Mar</span>
-            <span style="font-size:11px;color:var(--text3)">Apr</span>
-            <span style="font-size:11px;color:var(--text3)">May</span>
-            <span style="font-size:11px;color:var(--text3)">Jun</span>
+            <span style="font-size:11px;color:var(--text3)">Sem 1</span>
+            <span style="font-size:11px;color:var(--text3)">Sem 2</span>
+            <span style="font-size:11px;color:var(--text3)">Sem 3</span>
+            <span style="font-size:11px;color:var(--text3)">Sem 4</span>
+            <span style="font-size:11px;color:var(--text3)">Sem 5</span>
+            <span style="font-size:11px;color:var(--text3)">Sem 6</span>
           </div>
         </div>
 
+        <!-- ROLE DISTRIBUTION DONUT -->
         <div class="card">
           <div class="card-header">
-            <div class="card-title">Recent Notices</div>
+            <div class="card-title">🎯 Role Distribution</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:30px;padding:10px 0;">
+            <div id="donutChart" style="position:relative;width:140px;height:140px;"></div>
+            <div id="donutLegend" style="display:flex;flex-direction:column;gap:12px;"></div>
+          </div>
+          <div style="margin-top:16px;">
+            <div class="card-title" style="font-size:14px;margin-bottom:12px;">📁 Resource Types</div>
+            <div id="resourceTypeBars" style="display:flex;flex-direction:column;gap:10px;"></div>
+          </div>
+        </div>
+
+        <!-- RECENT NOTICES -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📢 Recent Notices</div>
             <span class="card-action" onclick="navigate('notices', document.querySelector('[onclick*=notices]'))">View
               All →</span>
           </div>
@@ -2453,9 +2474,10 @@
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-        <button class="btn btn-secondary btn-sm"><i class="fas fa-filter"></i> Filter</button>
-        <button class="btn btn-success btn-sm"><i class="fas fa-check-double"></i> Approve All</button>
-        <button class="btn btn-danger btn-sm"><i class="fas fa-times"></i> Reject All</button>
+        <button class="btn btn-success btn-sm" onclick="approveAllPending()"><i class="fas fa-check-double"></i> Approve
+          All</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectAllPending()"><i class="fas fa-times"></i> Reject
+          All</button>
       </div>
 
       <div id="pendingList"></div>
@@ -2895,7 +2917,28 @@
       } else { const e = await r.json().catch(() => ({})); alert(e.detail || 'Failed'); }
     }
 
-    // ===== LOAD NOTICES =====
+    async function approveAllPending() {
+      if (!pendingList.length) { alert('No pending items to approve.'); return; }
+      if (!confirm(`Approve all ${pendingList.length} pending item(s)?`)) return;
+      for (const p of pendingList) {
+        await fetch(`/api/faculty/review/${p.resource_id}`, { method: 'PUT', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'APPROVED' }) });
+      }
+      pendingList = [];
+      renderPending();
+      loadStats();
+      loadResources();
+    }
+
+    async function rejectAllPending() {
+      if (!pendingList.length) { alert('No pending items to reject.'); return; }
+      if (!confirm(`Reject all ${pendingList.length} pending item(s)? This cannot be undone.`)) return;
+      for (const p of pendingList) {
+        await fetch(`/api/faculty/review/${p.resource_id}`, { method: 'PUT', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'REJECTED' }) });
+      }
+      pendingList = [];
+      renderPending();
+      loadStats();
+    }
     async function loadNotices() {
       const n = await apiFetch('/api/notices');
       allNotices = n || [];
@@ -3038,9 +3081,95 @@
 
     // ===== ACTIVITY CHART =====
     function renderChart() {
+      // Bar chart per semester using real user data
       const chart = document.getElementById('activityChart');
-      const data = [{ s: 0.6, l: 0.3 }, { s: 0.75, l: 0.4 }, { s: 0.5, l: 0.35 }, { s: 0.85, l: 0.5 }, { s: 0.7, l: 0.45 }, { s: 0.9, l: 0.55 }];
-      chart.innerHTML = data.map(d => `<div class="chart-bar-group"><div class="chart-bar students" style="height:${d.s * 100}%"></div><div class="chart-bar lecturers" style="height:${d.l * 100}%"></div></div>`).join('');
+      const semCounts = [0, 0, 0, 0, 0, 0];
+      allUsers.forEach(u => {
+        if (u.role === 'STUDENT' && u.semester_number >= 1 && u.semester_number <= 6) {
+          semCounts[u.semester_number - 1]++;
+        }
+      });
+      const maxVal = Math.max(...semCounts, 1);
+      const facultyCount = allUsers.filter(u => u.role === 'FACULTY').length;
+      chart.innerHTML = semCounts.map((count, i) => {
+        const sH = Math.max((count / maxVal) * 100, 8);
+        const fH = Math.max((facultyCount / 6 / maxVal) * 100, 5);
+        return `<div class="chart-bar-group" title="Sem ${i + 1}: ${count} students">
+          <div class="chart-bar students" style="height:${sH}%"></div>
+          <div class="chart-bar lecturers" style="height:${fH}%"></div>
+        </div>`;
+      }).join('');
+
+      // Donut chart — role distribution
+      renderDonut();
+      // Resource type bars
+      renderResourceTypeBars();
+    }
+
+    function renderDonut() {
+      const students = allUsers.filter(u => u.role === 'STUDENT').length;
+      const faculty = allUsers.filter(u => u.role === 'FACULTY').length;
+      const admins = allUsers.filter(u => u.role === 'ADMIN').length;
+      const total = students + faculty + admins || 1;
+      const sPct = (students / total) * 100;
+      const fPct = (faculty / total) * 100;
+      const aPct = (admins / total) * 100;
+
+      const donut = document.getElementById('donutChart');
+      donut.innerHTML = `
+        <svg viewBox="0 0 36 36" style="width:140px;height:140px;transform:rotate(-90deg)">
+          <circle cx="18" cy="18" r="14" fill="none" stroke="var(--bg3)" stroke-width="4"/>
+          <circle cx="18" cy="18" r="14" fill="none" stroke="#4f7cff" stroke-width="4"
+            stroke-dasharray="${sPct * 0.88} ${88 - sPct * 0.88}" stroke-dashoffset="0"
+            style="transition:stroke-dasharray 1s ease"/>
+          <circle cx="18" cy="18" r="14" fill="none" stroke="#7b5ea7" stroke-width="4"
+            stroke-dasharray="${fPct * 0.88} ${88 - fPct * 0.88}" stroke-dashoffset="${-sPct * 0.88}"
+            style="transition:stroke-dasharray 1s ease"/>
+          <circle cx="18" cy="18" r="14" fill="none" stroke="#ff4757" stroke-width="4"
+            stroke-dasharray="${aPct * 0.88} ${88 - aPct * 0.88}" stroke-dashoffset="${-(sPct + fPct) * 0.88}"
+            style="transition:stroke-dasharray 1s ease"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div style="font-size:22px;font-weight:800;font-family:'Outfit',sans-serif;">${total}</div>
+          <div style="font-size:10px;color:var(--text3);font-weight:600;">TOTAL</div>
+        </div>
+      `;
+
+      const legend = document.getElementById('donutLegend');
+      legend.innerHTML = [
+        { label: 'Students', count: students, color: '#4f7cff', pct: Math.round(sPct) },
+        { label: 'Faculty', count: faculty, color: '#7b5ea7', pct: Math.round(fPct) },
+        { label: 'Admins', count: admins, color: '#ff4757', pct: Math.round(aPct) }
+      ].map(item => `
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${item.color};box-shadow:0 0 6px ${item.color}50"></div>
+          <div>
+            <div style="font-size:13px;font-weight:600;">${item.count} ${item.label}</div>
+            <div style="font-size:11px;color:var(--text3)">${item.pct}%</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderResourceTypeBars() {
+      const container = document.getElementById('resourceTypeBars');
+      const types = { PDF: 0, PPT: 0, DOC: 0, IMAGE: 0 };
+      allResources.forEach(r => { if (types[r.file_type] !== undefined) types[r.file_type]++; });
+      const maxCount = Math.max(...Object.values(types), 1);
+      const colors = { PDF: '#ff6b6b', PPT: '#ff6b35', DOC: '#4f7cff', IMAGE: '#00d4aa' };
+      const icons = { PDF: 'fa-file-pdf', PPT: 'fa-file-powerpoint', DOC: 'fa-file-word', IMAGE: 'fa-file-image' };
+      container.innerHTML = Object.entries(types).map(([type, count]) => {
+        const pct = Math.max((count / maxCount) * 100, 4);
+        return `<div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;"><i class="fas ${icons[type]}" style="color:${colors[type]}"></i> ${type}</span>
+            <span style="font-size:11px;color:var(--text3)">${count}</span>
+          </div>
+          <div style="height:6px;background:var(--bg3);border-radius:20px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${colors[type]};border-radius:20px;transition:width 1s ease;"></div>
+          </div>
+        </div>`;
+      }).join('');
     }
 
     // ===== SCHEDULE NOTICE =====
