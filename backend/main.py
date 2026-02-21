@@ -155,6 +155,7 @@ class StudentRegisterRequest(BaseModel):
     semester_number: int
     password: str
     phone: Optional[str] = None
+    department: str
 
 class StudentRegisterResponse(BaseModel):
     message: str
@@ -201,8 +202,8 @@ def register_student(student: StudentRegisterRequest):
 
         hashed_pw = hash_password(student.password)
         cursor.execute(
-            "INSERT INTO users (full_name, email, password_hash, role) VALUES (%s, %s, %s, 'STUDENT')",
-            (student.full_name, student.email, hashed_pw)
+            "INSERT INTO users (full_name, email, password_hash, role, department, phone) VALUES (%s, %s, %s, 'STUDENT', %s, %s)",
+            (student.full_name, student.email, hashed_pw, student.department, student.phone)
         )
         user_id = cursor.lastrowid
 
@@ -237,7 +238,7 @@ def _do_login(email: str, password: str, expected_role: str) -> LoginResponse:
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
-            "SELECT user_id, full_name, email, password_hash, role FROM users WHERE email = %s",
+            "SELECT user_id, full_name, email, password_hash, role, department FROM users WHERE email = %s",
             (email,)
         )
         user = cursor.fetchone()
@@ -258,6 +259,7 @@ def _do_login(email: str, password: str, expected_role: str) -> LoginResponse:
             "sub": str(user['user_id']),
             "role": user['role'],
             "name": user['full_name'],
+            "department": user['department'] if user.get('department') else "ALL"
         })
 
         return LoginResponse(
@@ -521,22 +523,36 @@ async def upload_resource(
 
 # ── GET /api/notices ─────────────────────────────────────────────────────────
 @app.get("/api/notices")
-def get_notices(limit: Optional[int] = Query(None)):
+def get_notices(request: Request, limit: Optional[int] = Query(None)):
     """Return all notices ordered by newest first."""
+    user = get_current_user(request)
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Database connection failed")
 
     cursor = conn.cursor(dictionary=True)
     try:
-        query = """
-            SELECT n.notice_id, n.title, n.content, n.created_at,
-                   u.full_name AS posted_by, n.posted_by AS posted_by_id
-            FROM notices n
-            JOIN users u ON n.posted_by = u.user_id
-            ORDER BY n.created_at DESC
-        """
-        params = []
+        department = user.get("department", "ALL")
+
+        # Faculty/Admin see all notices. Students only see ALL or their own department.
+        if user["role"] in ["FACULTY", "ADMIN"]:
+            query = """
+                SELECT n.notice_id, n.title, n.content, n.target_audience, n.created_at, u.full_name as author
+                FROM notices n
+                JOIN users u ON n.posted_by = u.user_id
+                ORDER BY n.created_at DESC
+            """
+            params = []
+        else:
+            query = """
+                SELECT n.notice_id, n.title, n.content, n.target_audience, n.created_at, u.full_name as author
+                FROM notices n
+                JOIN users u ON n.posted_by = u.user_id
+                WHERE n.target_audience = 'ALL' OR n.target_audience = %s
+                ORDER BY n.created_at DESC
+            """
+            params = [department]
+            
         if limit:
             query += " LIMIT %s"
             params.append(limit)
@@ -816,6 +832,7 @@ def review_resource(resource_id: int, body: ReviewAction, request: Request):
 class NoticeCreate(BaseModel):
     title: str
     content: str
+    target_audience: str = "ALL"
 
 @app.post("/api/faculty/notice")
 def create_notice(body: NoticeCreate, request: Request):
@@ -830,8 +847,8 @@ def create_notice(body: NoticeCreate, request: Request):
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
-            "INSERT INTO notices (title, content, posted_by) VALUES (%s, %s, %s)",
-            (body.title, body.content, user_id)
+            "INSERT INTO notices (title, content, target_audience, posted_by) VALUES (%s, %s, %s, %s)",
+            (body.title, body.content, body.target_audience, int(user_data['sub']))
         )
         conn.commit()
         return {"message": "Notice posted successfully.", "notice_id": cursor.lastrowid}
@@ -1056,6 +1073,8 @@ class AdminCreateUser(BaseModel):
     role: str  # STUDENT, FACULTY, ADMIN
     usn: Optional[str] = None
     semester_number: Optional[int] = None
+    department: Optional[str] = None
+    phone: Optional[str] = None
 
 @app.post("/api/admin/user")
 def admin_create_user(body: AdminCreateUser, request: Request):
@@ -1078,8 +1097,8 @@ def admin_create_user(body: AdminCreateUser, request: Request):
             raise HTTPException(status_code=400, detail="Invalid role.")
 
         cursor.execute(
-            "INSERT INTO users (full_name, email, password_hash, role) VALUES (%s, %s, %s, %s)",
-            (body.full_name, body.email, hashed, role)
+            "INSERT INTO users (full_name, email, password_hash, role, department, phone) VALUES (%s, %s, %s, %s, %s, %s)",
+            (body.full_name, body.email, hashed, role, body.department, body.phone)
         )
         user_id = cursor.lastrowid
 

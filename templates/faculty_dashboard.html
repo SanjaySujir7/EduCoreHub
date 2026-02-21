@@ -1277,6 +1277,16 @@
                 <div class="form-grid">
                     <div class="form-group full"><label class="form-label">Notice Title *</label><input
                             class="form-input" id="noticeTitle" placeholder="e.g. Semester Exam Schedule"></div>
+                    <div class="form-group full"><label class="form-label">Target Audience *</label>
+                        <select class="form-input" id="noticeTarget">
+                            <option value="ALL">Everyone (All Departments)</option>
+                            <option value="BCA">BCA</option>
+                            <option value="BBA">BBA</option>
+                            <option value="B.Com">B.Com</option>
+                            <option value="BSc">BSc</option>
+                            <option value="BA">BA</option>
+                        </select>
+                    </div>
                     <div class="form-group full"><label class="form-label">Content *</label>
                         <textarea class="form-textarea" id="noticeContent" placeholder="Write notice content..."
                             style="min-height:140px"></textarea>
@@ -1502,11 +1512,13 @@
 
         // ===== POST NOTICE =====
         async function postNotice() {
-            const t = document.getElementById('noticeTitle').value.trim(), c = document.getElementById('noticeContent').value.trim();
+            const t = document.getElementById('noticeTitle').value.trim();
+            const c = document.getElementById('noticeContent').value.trim();
+            const tgt = document.getElementById('noticeTarget').value;
             if (!t || !c) { showAlert('noticeAlert', 'error', 'Fill all fields.'); return; }
-            const r = await fetch('/api/faculty/notice', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t, content: c }) });
+            const r = await fetch('/api/faculty/notice', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t, content: c, target_audience: tgt }) });
             const data = await r.json(); if (!r.ok) { showAlert('noticeAlert', 'error', data.detail || 'Failed.'); return; }
-            showAlert('noticeAlert', 'success', data.message || 'Posted!'); document.getElementById('noticeTitle').value = ''; document.getElementById('noticeContent').value = ''; loadNotices(); loadStats();
+            showAlert('noticeAlert', 'success', data.message || 'Posted!'); document.getElementById('noticeTitle').value = ''; document.getElementById('noticeContent').value = ''; document.getElementById('noticeTarget').value = 'ALL'; loadNotices(); loadStats();
         }
 
         function showAlert(id, type, msg) { const el = document.getElementById(id); el.className = 'alert ' + type + ' show'; el.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`; setTimeout(() => { el.classList.remove('show'); }, 5000); }

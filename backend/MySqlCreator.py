@@ -20,6 +20,8 @@ try:
         email VARCHAR(100) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         role ENUM('ADMIN','FACULTY','STUDENT') NOT NULL,
+        department VARCHAR(100) DEFAULT NULL,
+        phone VARCHAR(20) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB;
     """)
@@ -112,6 +114,7 @@ try:
         notice_id INT PRIMARY KEY AUTO_INCREMENT,
         title VARCHAR(255) NOT NULL,
         content TEXT NOT NULL,
+        target_audience VARCHAR(100) DEFAULT 'ALL',
         posted_by INT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (posted_by)

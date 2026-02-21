@@ -476,6 +476,8 @@
             accent-color: var(--primary);
             cursor: pointer;
             border-radius: 5px;
+            appearance: checkbox;
+            -webkit-appearance: checkbox;
         }
 
         .terms-row label {
@@ -652,12 +654,12 @@
             </div>
 
             <h1 class="left-heading">
-                Your Department's<br />
+                Your College's<br />
                 <span>Digital Hub</span>
             </h1>
             <p class="left-desc">
                 A centralized portal for official notices, study materials,
-                and peer resources — all in one secure place for the BCA Department.
+                and peer resources — all in one secure place.
             </p>
 
             <ul class="features-list">
@@ -728,6 +730,33 @@
                                     autocomplete="email" required />
                             </div>
                             <span class="field-error" id="err-email">⚠ Enter a valid email address.</span>
+                        </div>
+                    </div>
+
+                    <!-- Phone + Department (common) -->
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label for="phone">Phone Number</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">📱</span>
+                                <input type="tel" id="phone" name="phone" placeholder="e.g. 9876543210" required />
+                            </div>
+                            <span class="field-error" id="err-phone">⚠ Please enter a valid 10-digit number.</span>
+                        </div>
+                        <div class="field-group">
+                            <label for="department">Department</label>
+                            <div class="input-wrap">
+                                <span class="input-icon">🏛️</span>
+                                <select id="department" name="department" required>
+                                    <option value="" disabled selected>Select department</option>
+                                    <option value="BCA">BCA</option>
+                                    <option value="BBA">BBA</option>
+                                    <option value="B.Com">B.Com</option>
+                                    <option value="BSc">BSc</option>
+                                    <option value="BA">BA</option>
+                                </select>
+                            </div>
+                            <span class="field-error" id="err-department">⚠ Please select your department.</span>
                         </div>
                     </div>
 
@@ -892,35 +921,31 @@
 
             let valid = true;
 
-            // Name
-            const name = document.getElementById('fullName').value.trim();
-            if (name.length < 2) { showError('fullName', 'err-fullName'); valid = false; }
+            let isValid = true;
 
-            // Email
+            // Fetch all values at once
+            const fullName = document.getElementById('fullName').value.trim();
             const email = document.getElementById('email').value.trim();
-            if (!validateEmail(email)) { showError('email', 'err-email'); valid = false; }
+            const phone = document.getElementById('phone').value.trim();
+            const department = document.getElementById('department').value;
+            const usn = document.getElementById('usn').value.trim().toUpperCase();
+            const semesterStr = document.getElementById('semester').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const termsChecked = document.getElementById('terms').checked;
 
-            // Student fields
-            const usn = document.getElementById('usn').value.trim();
-            if (!validateUSN(usn)) { showError('usn', 'err-usn'); valid = false; }
-            const sem = document.getElementById('semester').value;
-            if (!sem) { showError('semester', 'err-semester'); valid = false; }
+            // Validation logic
+            if (!fullName) { showError('fullName', 'err-fullName'); isValid = false; }
+            if (!validateEmail(email)) { showError('email', 'err-email'); isValid = false; }
+            if (!phone || phone.length !== 10 || !/^\d+$/.test(phone)) { showError('phone', 'err-phone'); isValid = false; }
+            if (!department) { showError('department', 'err-department'); isValid = false; }
+            if (!validateUSN(usn)) { showError('usn', 'err-usn'); isValid = false; }
+            if (!semesterStr) { showError('semester', 'err-semester'); isValid = false; }
+            if (password.length < 8) { showError('password', 'err-password'); isValid = false; }
+            if (confirmPassword !== password) { showError('confirmPassword', 'err-confirmPassword'); isValid = false; }
+            if (!termsChecked) { document.getElementById('err-terms').classList.add('visible'); isValid = false; }
 
-
-            // Password
-            const pw = document.getElementById('password').value;
-            if (pw.length < 8) { showError('password', 'err-password'); valid = false; }
-
-            // Confirm password
-            const cpw = document.getElementById('confirmPassword').value;
-            if (cpw !== pw) { showError('confirmPassword', 'err-confirmPassword'); valid = false; }
-
-            // Terms
-            if (!document.getElementById('terms').checked) {
-                document.getElementById('err-terms').classList.add('visible'); valid = false;
-            }
-
-            if (!valid) return;
+            if (!isValid) return;
 
             // ── Real API call ────────────────────────────────────────────────
             const btn = document.getElementById('submitBtn');
@@ -933,15 +958,19 @@
             errorBanner.style.display = 'none';
 
             // Convert "3rd Semester" → 3
-            const semText = document.getElementById('semester').value; // e.g. "3rd Semester"
-            const semesterNumber = parseInt(semText);
+            const semMap = {
+                "1st Semester": 1, "2nd Semester": 2, "3rd Semester": 3, "4th Semester": 4,
+                "5th Semester": 5, "6th Semester": 6, "7th Semester": 7, "8th Semester": 8
+            };
 
             const payload = {
-                full_name: name,
+                full_name: fullName,
                 email: email,
+                phone: phone,
+                department: department,
                 usn: usn,
-                semester_number: semesterNumber,
-                password: pw,
+                semester_number: semMap[semesterStr],
+                password: password,
             };
 
             fetch('http://127.0.0.1:8000/api/register', {
