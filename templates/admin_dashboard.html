@@ -2219,16 +2219,16 @@
             <i class="fas fa-search"></i>
             <input type="text" placeholder="Search by name, email, ID..." oninput="filterTable(this.value)">
           </div>
-          <select class="filter-select" onchange="filterByRole(this.value)">
+          <select class="filter-select" id="roleFilter" onchange="applyUserFilters()">
             <option value="">All Roles</option>
-            <option>Student</option>
-            <option>Lecturer</option>
-            <option>Admin</option>
+            <option value="STUDENT">Student</option>
+            <option value="FACULTY">Lecturer</option>
+            <option value="ADMIN">Admin</option>
           </select>
-          <select class="filter-select">
+          <select class="filter-select" id="statusFilter" onchange="applyUserFilters()">
             <option value="">All Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
           </select>
           <button class="btn btn-primary btn-sm"
             onclick="navigate('create', document.querySelector('[onclick*=create]'))"><i class="fas fa-plus"></i> Add
@@ -2782,10 +2782,19 @@
     }
     function filterTable(q) {
       q = q.toLowerCase();
-      renderUsers(allUsers.filter(u => u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.usn || '').toLowerCase().includes(q)));
+      renderUsers(allUsers.filter(u => (u.full_name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q) || (u.usn || '').toLowerCase().includes(q)));
     }
     function filterByRole(role) {
-      renderUsers(role ? allUsers.filter(u => u.role === role.toUpperCase()) : allUsers);
+      renderUsers(role ? allUsers.filter(u => u.role === role) : allUsers);
+    }
+    function applyUserFilters() {
+      const role = document.getElementById('roleFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      let filtered = allUsers;
+      if (role) filtered = filtered.filter(u => u.role === role);
+      if (status === 'Active') { /* all users are active, keep filtered as-is */ }
+      else if (status === 'Inactive') { filtered = []; }
+      renderUsers(filtered);
     }
     async function deleteUserById(uid, btn) {
       if (!confirm('Delete this user?')) return;
